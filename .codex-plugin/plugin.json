@@ -1,0 +1,25 @@
+{
+  "name": "perplexity-platform",
+  "version": "0.1.0",
+  "description": "Skills for building on the Perplexity API Platform (Agent API, Search API, Embeddings).",
+  "author": {
+    "name": "Perplexity"
+  },
+  "homepage": "https://docs.perplexity.ai",
+  "keywords": [
+    "perplexity",
+    "agent-api",
+    "sonar",
+    "migration",
+    "search-api",
+    "embeddings"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Perplexity Platform",
+    "shortDescription": "Official Perplexity API Platform skills",
+    "category": "Developer Tools"
+  },
+  "repository": "https://github.com/perplexityai/api-platform-developers"
+}

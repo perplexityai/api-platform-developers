@@ -1,0 +1,17 @@
+{
+  "name": "api-platform-developers",
+  "owner": {
+    "name": "Perplexity"
+  },
+  "description": "Official Perplexity API Platform skills: migration guides, API integration helpers, and app-building workflows.",
+  "plugins": [
+    {
+      "name": "perplexity-platform",
+      "source": "./",
+      "description": "Skills for building on the Perplexity API Platform (Agent API, Search API, Embeddings).",
+      "displayName": "Perplexity Platform",
+      "homepage": "https://docs.perplexity.ai",
+      "repository": "https://github.com/perplexityai/api-platform-developers"
+    }
+  ]
+}

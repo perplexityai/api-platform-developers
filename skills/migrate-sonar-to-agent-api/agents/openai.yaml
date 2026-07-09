@@ -1,0 +1,8 @@
+# Codex-specific skill metadata (ignored by other Agent Skills clients).
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "perplexityDocs"
+      description: "Perplexity API docs search (canonical facts for this skill)"
+      transport: "streamable_http"
+      url: "https://docs.perplexity.ai/mcp"

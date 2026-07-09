@@ -1,0 +1,5 @@
+{
+  "name": "perplexity-platform",
+  "description": "Skills for building on the Perplexity API Platform (Agent API, Search API, Embeddings).",
+  "author": { "name": "Perplexity" }
+}

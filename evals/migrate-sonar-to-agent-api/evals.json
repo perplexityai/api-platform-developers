@@ -1,0 +1,38 @@
+{
+  "skill": "migrate-sonar-to-agent-api",
+  "format_note": "Compatible with the skill-creator eval format (prompt + expected_output + files). Run manually per README.md, or wire into skill-creator's eval harness later.",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Migrate this application from the Perplexity Sonar API to the Agent API.",
+      "expected_output": "All three scripts call POST https://api.perplexity.ai/v1/agent. Filters move inside tools:[{type:web_search,filters:{...}}]; max_tokens becomes max_output_tokens; sources are read from the search_results output item (no top-level citations); the related-questions feature is preserved via a documented workaround, not silently dropped; the streaming consumer handles response.output_text.delta plus all terminal events; non-streaming code branches on response.status. All three scripts run successfully against production, and check.sh passes on the migrated directory.",
+      "files": [
+        "fixture/raw-http/"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Migrate this application from the Perplexity Sonar API to the Agent API.",
+      "expected_output": "Same rubric as case 1, but in the Perplexity SDK style: client.chat.completions.create(...) becomes client.responses.create(...) on the same client, filter kwargs move into the web_search tool, max_tokens becomes max_output_tokens, output is read via response.output_text or the output[] walk, sources come from the search_results output item, streaming iterates typed events instead of delta.content. check.sh passes on the migrated directory.",
+      "files": [
+        "fixture/perplexity-sdk/"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "My Perplexity code returns 400 with error message: invalid request body: json: unknown field \"max_tokens\" - after I pointed it at /v1/agent. Fix it.",
+      "expected_output": "The skill auto-triggers on the error string. It renames max_tokens to max_output_tokens AND checks the rest of the request for other leftover Sonar-only fields (the strict-mode remove list: top-level search filters, return_related_questions), and fixes the stale choices/citations response parsing instead of stopping at the one named field.",
+      "files": [
+        "cases/half-migrated/trend_report.py"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "After migrating to the Agent API my app lost its citations - result[\"citations\"] is always missing. Fix it.",
+      "expected_output": "The skill auto-triggers on the missing-citations symptom. It rewrites source handling to read the search_results output item from output[] (results[].url/title/snippet) and notes that message annotations are often empty and must not be relied on.",
+      "files": [
+        "cases/bad-parsing/trend_report.py"
+      ]
+    }
+  ]
+}
