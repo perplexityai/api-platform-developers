@@ -11,18 +11,17 @@ argument-hint: "[search query or URL]"
 
 Installs, authenticates, and drives Perplexity's public `pplx` CLI: `pplx search web` for live web search, `pplx content fetch` for page content.
 **The entire CLI surface is three commands - `pplx auth login`, `pplx search web <QUERY>...`, `pplx content fetch <URL>` - plus global `--stdout-preview[=CHARS]`, `-V/--version`, `-h/--help`. Nothing else exists.**
-Output contract: success = exit 0 and exactly one JSON object on stdout; failures are pitfall 5.
+Output contract: success = exit 0 and exactly one JSON object on stdout; failures are pitfall 4.
 
-## Top 8 pitfalls
+## Top 7 pitfalls
 
-1. **There is no `ask`, `chat`, `llm`, or `answer` command.** The CLI searches and fetches; it does not answer questions. `pplx ask hi` exits 1 with an `ARGUMENT_ERROR` JSON on stderr.
-2. **`pplx auth login` is TTY-only** (hidden interactive prompt) and hard-rejects non-interactive use - as an agent, set the `PERPLEXITY_API_KEY` env var instead. `auth logout` and `auth login <key>` do not exist.
-3. **`--stdout-preview` is a no-op without a save dir.** It truncates long string fields (`...<truncated>` markers) only when the result is also saved via `--output-dir DIR` or `$PPLX_OUTPUT_DIR`; alone, you get full-size output - and hits can be multi-KB each, so a default search can return tens of KB.
-4. **Extra positional queries are reformulations of the SAME search** (recall boosters for one question), not separate searches. N distinct topics = N invocations.
-5. **Every failure exits 1 with empty stdout and exactly one JSON error object on stderr** (`{"error":{"code","message","command","hint"?}}`) - parse stderr, not stdout, on failure. Codes include `AUTHENTICATION`, `UNKNOWN_ARGUMENT`, `ARGUMENT_ERROR`, `BAD_REQUEST` (not exhaustive; branch on `error.code`).
-6. **No `--json` or `--format` flags exist** - output is already JSON, and the strict parser rejects any unknown flag with `UNKNOWN_ARGUMENT`.
-7. **Date flags use MM/DD/YYYY, not ISO dates** (e.g. `--published-after-date 07/01/2026`).
-8. **Don't combine `--recency-filter` with date bounds.** The server rejects `--recency-filter` + `--published-after/before-date` as `BAD_REQUEST` ("recency cannot be used together with published_after or published_before") - a wasted round trip, not caught client-side.
+1. **`pplx auth login` is TTY-only** (hidden interactive prompt) and hard-rejects non-interactive use - as an agent, set the `PERPLEXITY_API_KEY` env var instead. `auth logout` and `auth login <key>` do not exist.
+2. **`--stdout-preview` is a no-op without a save dir.** It truncates long string fields (`...<truncated>` markers) only when the result is also saved via `--output-dir DIR` or `$PPLX_OUTPUT_DIR`; alone, you get full-size output - and hits can be multi-KB each, so a default search can return tens of KB.
+3. **Extra positional queries are reformulations of the SAME search** (recall boosters for one question), not separate searches. N distinct topics = N invocations.
+4. **Every failure exits 1 with empty stdout and exactly one JSON error object on stderr** (`{"error":{"code","message","command","hint"?}}`) - parse stderr, not stdout, on failure. Codes include `AUTHENTICATION`, `UNKNOWN_ARGUMENT`, `ARGUMENT_ERROR`, `BAD_REQUEST` (not exhaustive; branch on `error.code`).
+5. **No `--json` or `--format` flags exist** - output is already JSON, and the strict parser rejects any unknown flag with `UNKNOWN_ARGUMENT`.
+6. **Date flags use MM/DD/YYYY, not ISO dates** (e.g. `--published-after-date 07/01/2026`).
+7. **Don't combine `--recency-filter` with date bounds.** The server rejects `--recency-filter` + `--published-after/before-date` as `BAD_REQUEST` ("recency cannot be used together with published_after or published_before") - a wasted round trip, not caught client-side.
 
 ## Install
 
@@ -53,7 +52,7 @@ pplx search web "kubernetes pod OOMKilled causes"
 ```
 
 Stdout: `{hits: [{url, title, domain, snippet?, ...}], total, saved_to?}`.
-To keep tokens down, save-and-preview - the extra positional here is a rewording of the same question (pitfall 4):
+To keep tokens down, save-and-preview - the extra positional here is a rewording of the same question (pitfall 3):
 
 ```sh
 pplx search web "kubernetes pod OOMKilled causes" "why does k8s keep killing my pod with OOMKilled" \
