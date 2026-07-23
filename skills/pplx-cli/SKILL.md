@@ -26,7 +26,8 @@ Update with `pplx update` (checksum-verified in-place replacement, no API key ne
 
 ## Auth
 
-To auth run: `pplx auth login` if not authed already.
+To auth run: `pplx auth login` if not authed already (interactive, needs a terminal; keys: https://www.perplexity.ai/account/api).
+In non-interactive sessions (agents, CI) export `PERPLEXITY_API_KEY` instead - `auth login` rejects piped input (pitfall 1).
 
 The env var takes precedence over a key stored by interactive `pplx auth login` (`<config>/perplexity/credentials.json`; macOS `~/Library/Application Support`, Linux `$XDG_CONFIG_HOME` or `~/.config`).
 No configured key results in an `AUTHENTICATION` error on the first real command.
