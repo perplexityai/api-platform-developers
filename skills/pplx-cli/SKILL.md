@@ -10,7 +10,7 @@ argument-hint: "[search query or URL]"
 ## What this skill does
 
 Installs, authenticates, and drives Perplexity's public `pplx` CLI: `pplx search web` for live web search, `pplx content fetch` for page content.
-**The entire CLI surface is three commands - `pplx auth login`, `pplx search web <QUERY>...`, `pplx content fetch <URL>` - plus global `--stdout-preview[=CHARS]`, `-V/--version`, `-h/--help`. Nothing else exists.**
+**The entire CLI surface is four commands - `pplx auth login`, `pplx search web <QUERY>...`, `pplx content fetch <URL>`, `pplx update` - plus global `--stdout-preview[=CHARS]`, `-V/--version`, `-h/--help`. Nothing else exists.**
 Output contract: success = exit 0 and exactly one JSON object on stdout; failures are pitfall 4.
 
 ## Top 7 pitfalls
@@ -33,7 +33,7 @@ curl -fsSL https://github.com/perplexityai/perplexity-cli/releases/latest/downlo
 
 SHA-256-verified, no sudo, installs to `~/.local/bin/pplx` (override: `PPLX_INSTALL_PATH`); ensure `~/.local/bin` is on `PATH`.
 Platforms: macOS arm64, Linux x86_64, Linux arm64 - only.
-Update by re-running the same one-liner.
+Update with `pplx update` (checksum-verified in-place replacement, no API key needed); `pplx update --check` only reports whether a newer release exists.
 
 ## Auth
 
