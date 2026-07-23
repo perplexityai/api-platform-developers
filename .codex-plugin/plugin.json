@@ -1,6 +1,6 @@
 {
   "name": "perplexity-platform",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Skills for building on the Perplexity API Platform (Agent API, Search API, Embeddings).",
   "author": {
     "name": "Perplexity"
@@ -12,7 +12,11 @@
     "sonar",
     "migration",
     "search-api",
-    "embeddings"
+    "embeddings",
+    "pplx",
+    "cli",
+    "web-search",
+    "content-fetch"
   ],
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
