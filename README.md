@@ -39,11 +39,22 @@ Or use the ecosystem installers:
 
 Invocation in Codex: implicit by description match, or explicit with `$migrate-sonar-to-agent-api`.
 
+### Standalone (no plugin)
+
+Any agent that can fetch a URL can use a skill directly - tell it:
+
+```
+Read https://raw.githubusercontent.com/perplexityai/api-platform-developers/main/skills/pplx-cli/SKILL.md, install the skill, and use it for search.
+```
+
+(The github.com blob URL works too; the raw URL skips the HTML chrome.)
+
 ## Skill catalog
 
 | Skill | Invoke | What it does |
 |---|---|---|
 | migrate-sonar-to-agent-api | `/perplexity-platform:migrate-sonar-to-agent-api [path]` (Claude Code) or `$migrate-sonar-to-agent-api` (Codex) | Migrates a codebase from Sonar chat completions to the Agent API |
+| pplx-cli | `/perplexity-platform:pplx-cli [query or URL]` (Claude Code) or `$pplx-cli` (Codex) | Installs and uses the `pplx` CLI for live web search and page-content fetch |
 
 Skills also auto-trigger on matching context (for example, "help me migrate from Sonar") once installed.
 

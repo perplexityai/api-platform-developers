@@ -8,10 +8,12 @@ Each skill is a self-contained directory with a SKILL.md plus supporting referen
 | Skill | What it does | When to use |
 |---|---|---|
 | migrate-sonar-to-agent-api | Migrates a codebase from Perplexity's Sonar API (chat completions) to the Agent API: endpoints, request params, model slugs, response parsing, streaming, citations | Migrating off Sonar or chat completions, replacing deprecated sonar-pro / sonar-reasoning models, or fixing 400 unknown-field errors and missing citations after a migration attempt |
+| pplx-cli | Installs and uses Perplexity's public `pplx` CLI: SHA-verified install, API-key auth, `search web`, `content fetch`, JSON output handling | Needing live web search results or page content from the terminal, or installing and authenticating the pplx command |
 
 ## Triggers
 
 When migrating code from Perplexity's Sonar API (chat completions) to the Agent API, or debugging 400 unknown-field errors / missing citations after such a migration, use the $migrate-sonar-to-agent-api skill.
+When you need live web search results or page content from the terminal, or need to install the Perplexity `pplx` CLI, use the $pplx-cli skill.
 
 ## Repo layout
 
