@@ -16,7 +16,7 @@
     "pplx",
     "cli",
     "web-search",
-    "content-fetch"
+    "content-snippets"
   ],
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
