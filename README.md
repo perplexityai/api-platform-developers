@@ -54,7 +54,7 @@ Read https://raw.githubusercontent.com/perplexityai/api-platform-developers/main
 | Skill | Invoke | What it does |
 |---|---|---|
 | migrate-sonar-to-agent-api | `/perplexity-platform:migrate-sonar-to-agent-api [path]` (Claude Code) or `$migrate-sonar-to-agent-api` (Codex) | Migrates a codebase from Sonar chat completions to the Agent API |
-| pplx-cli | `/perplexity-platform:pplx-cli [query or URL]` (Claude Code) or `$pplx-cli` (Codex) | Installs and uses the `pplx` CLI for live web search and page-content fetch |
+| pplx-cli | `/perplexity-platform:pplx-cli [query or URL]` (Claude Code) or `$pplx-cli` (Codex) | Installs and uses the `pplx` CLI for live web search and query-relevant page snippets |
 
 Skills also auto-trigger on matching context (for example, "help me migrate from Sonar") once installed.
 
