@@ -11,7 +11,6 @@ import asyncio
 
 from pplx_srch_sdk import AsyncPplxClient
 
-
 async def main():
     async with AsyncPplxClient() as client:
         hits = await client.search.web("python release notes", limit=10)

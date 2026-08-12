@@ -9,7 +9,6 @@ import pplx_srch_sdk
 
 hits = pplx_srch_sdk.search.web(
     "python 3.13 release notes",
-    intent="Confirm the official Python 3.13 changelog on python.org",
     limit=10,
     domains=["docs.python.org"],
     excluded_domains=["dev.to"],
@@ -25,7 +24,6 @@ Returns a bare `list[WebHit]`.
 |---|---|---|
 | `queries` (positional) | `str` or `list[str]` | The query, or up to 10 reformulation variants of one query (see below) |
 | `reformulations` | `list[str]` | Alternate reformulations when the positional is a single string |
-| `intent` | `str` | One short sentence stating what the search should find, verify, identify, or compare; does not change which pages are found |
 | `limit` | `int` | Maximum total results for the whole request (API max 100; larger values are not rejected) |
 | `country` | `str` | Country code, such as `"US"` |
 | `domains` | `list[str]` | Only these domains; always a list, even for one domain |
@@ -67,7 +65,6 @@ hits = pplx_srch_sdk.search.web([
 ```python
 hits = pplx_srch_sdk.search.web(
     "transformer architecture attention mechanism",
-    intent="Survey transformer-attention writeups published in early March 2025",
     published_after_date="3/1/2025",
     published_before_date="3/5/2025",
 )
@@ -77,6 +74,6 @@ hits = pplx_srch_sdk.search.web(
 
 Each hit has `{url, title, domain, snippet, date?, last_updated?}`.
 
-- `snippet` is always a string and is the text field for the hit; empty string when no text is available. Any longer backend context is folded into `snippet` (and `summary` is cleared - do not read `summary`).
+- `snippet` is always a string and is the text field for the hit; empty string when no text is available.
 - `date` is the publication date; `last_updated` is the last-modified date. Both optional; missing fields read as `None`.
 - Hits support attribute reads (`hit.url`), mapping access (`hit["url"]`, `{**hit}`, `hit.get("date")`, `hit.keys()`), and `dict(hit)` / `hit.to_dict()` for JSON-serializable rows. The mapping view contains only populated fields.

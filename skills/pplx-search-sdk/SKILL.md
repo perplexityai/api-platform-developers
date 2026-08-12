@@ -1,15 +1,15 @@
 ---
 name: pplx-search-sdk
-description: "Install and use pplx-srch-sdk, Perplexity's public Python Search SDK (import pplx_srch_sdk), for live web search and query-relevant page snippets from Python code. Use to search the web from a script or notebook, fan many searches out concurrently, get query-relevant excerpts from specific URLs, build multi-step research pipelines, or handle Perplexity Search API errors with typed exceptions."
-when_to_use: "Any request like: search the web from Python, use the Perplexity Python SDK, pip install pplx-srch-sdk, import pplx_srch_sdk, run many web searches in parallel, fan out search queries, get query-relevant excerpts from URLs in code, batch web research in a script, async Perplexity search client, handle Perplexity search rate limits in code."
+description: "Install and use pplx-srch-sdk, the public Python SDK for the Perplexity Search API (import pplx_srch_sdk): live web search and query-relevant page snippets from Python code. Use to search the web from a script or notebook, fan many searches out concurrently, get query-relevant excerpts from specific URLs, build multi-step research pipelines, or handle Search API errors with typed exceptions."
+when_to_use: "Any request like: search the web from Python, pip install pplx-srch-sdk, import pplx_srch_sdk, run many web searches in parallel, fan out search queries, get query-relevant excerpts from URLs in code, batch web research in a script, async search client, handle search rate limits in code."
 argument-hint: "[search query or URLs]"
 ---
 
-# pplx_srch_sdk - Perplexity's Python Search SDK
+# pplx_srch_sdk - Python Search SDK
 
 ## What this skill does
 
-Installs and drives `pplx-srch-sdk`, Perplexity's public Python SDK for the Search API: `pplx_srch_sdk.search.web` for live web search, `pplx_srch_sdk.search.web_many` for concurrent fan-out over many queries, `pplx_srch_sdk.content.snippets` for query-relevant page excerpts.
+Installs and drives `pplx-srch-sdk`, the public Python SDK for the Search API: `pplx_srch_sdk.search.web` for live web search, `pplx_srch_sdk.search.web_many` for concurrent fan-out over many queries, `pplx_srch_sdk.content.snippets` for query-relevant page excerpts.
 The sync facade covers most work; `pplx_srch_sdk.AsyncPplxClient` exposes the same surface async.
 
 ## Install and auth
@@ -32,17 +32,12 @@ Import succeeds without a key; the first sync-facade request raises `Authenticat
 ```python
 import pplx_srch_sdk
 
-hits = pplx_srch_sdk.search.web(
-    "rust async runtimes",
-    limit=5,
-    intent="Compare the maintained Rust async runtimes and their trade-offs",
-)
+hits = pplx_srch_sdk.search.web("rust async runtimes", limit=5)
 for hit in hits:
     print(hit.title, hit.url)
 ```
 
 `search.web` returns a bare `list[WebHit]` - no `.results` wrapper, no response envelope (pitfall 1).
-Pass `intent` - one short sentence stating what the search should find or verify; it documents the objective and does not change which pages are found.
 Keep queries short keyword phrases, usually 2-5 meaningful words, one topic per query; no quote marks, `site:`, or boolean `AND`/`OR` - use kwargs like `domains=[...]` and `excluded_domains=[...]` instead.
 Break multi-entity questions into separate single-entity queries and send them through `web_many`, not one long combined query.
 A list passed as the first argument is reformulations of ONE query, up to 10, merged into a single result list (pitfall 2).
@@ -87,12 +82,12 @@ for s in snips:
 
 One `SnippetResult` per input URL, in input order.
 **Check `error` on every result before trusting `text`** - a successful call can still carry per-URL failures (pitfall 4).
-Use `text`, not `content` or `summary`; elided regions inside `text` are marked with `…`.
+Use `text`, not `content`; elided regions inside `text` are marked with `…`.
 Token budgets and URL limits: [references/content.md](references/content.md).
 
 ## Result shapes
 
-- `search.web(...)` -> `list[WebHit]`; each hit has `{url, title, domain, snippet, date?, last_updated?}`. `snippet` is the text field for the hit and is an empty string when no text is available; `date` is the publication date and `last_updated` the last-modified date. Ignore `summary` - the SDK folds any longer context into `snippet` and clears it.
+- `search.web(...)` -> `list[WebHit]`; each hit has `{url, title, domain, snippet, date?, last_updated?}`. `snippet` is the text field for the hit and is an empty string when no text is available; `date` is the publication date and `last_updated` the last-modified date.
 - Typed records support attribute reads (`hit.url`), mapping access (`hit["url"]`, `{**hit}`, `hit.keys()`), and `dict(hit)` / `hit.to_dict()` for JSON-serializable rows. Missing optional fields read as `None`; the mapping view contains only populated fields.
 - `search.web_many(...)` -> `list[FanoutResult]`; each exposes `.ok` (success flag), `.spec` (the request kwargs), `.result` (the `list[WebHit]` on success), `.error` (the isolated exception). There is no `.request` attribute.
 - `content.snippets(...)` -> `list[SnippetResult]`; each has `{url, text?, tokens_count?, error?}`.
@@ -117,7 +112,6 @@ Inside `web_many`, per-query API errors land on `FanoutResult.error` instead of 
 ```python
 import asyncio
 import pplx_srch_sdk
-
 
 async def main():
     async with pplx_srch_sdk.AsyncPplxClient() as client:

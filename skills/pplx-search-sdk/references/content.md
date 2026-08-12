@@ -34,7 +34,7 @@ Returns `list[SnippetResult]`, one per input URL, in input order.
 
 `{url, text?, tokens_count?, error?}`.
 
-- Use `text`, not `content` or `summary`; missing fields read as `None`.
+- Use `text`, not `content`; missing fields read as `None`.
 - Elided regions inside `text` are marked with `…`.
 - **A successful call does not mean every URL succeeded.** Per-URL failures set `error` on that result and leave `text` unset - check `error` on each result before using `text`:
 

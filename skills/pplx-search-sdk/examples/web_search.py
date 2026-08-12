@@ -14,7 +14,6 @@ query = " ".join(sys.argv[1:]) or "rust async runtimes"
 try:
     hits = pplx_srch_sdk.search.web(
         query,
-        intent=f"Find current, authoritative pages about: {query}",
         limit=5,
         excluded_domains=["pinterest.com"],
     )

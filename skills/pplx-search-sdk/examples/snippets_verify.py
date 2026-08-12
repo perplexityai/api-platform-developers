@@ -12,7 +12,7 @@ import pplx_srch_sdk
 question = " ".join(sys.argv[1:]) or "how do rust async runtimes differ"
 
 try:
-    hits = pplx_srch_sdk.search.web(question, limit=8, intent=f"Verify: {question}")
+    hits = pplx_srch_sdk.search.web(question, limit=8)
     if not hits:
         print("no hits", file=sys.stderr)
         sys.exit(1)
