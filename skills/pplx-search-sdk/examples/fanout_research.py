@@ -2,7 +2,7 @@
 
 Usage: python fanout_research.py
 Needs: pip install pplx-srch-sdk; PERPLEXITY_API_KEY exported.
-Exit codes: 0 = artifacts written (even with per-query errors), 1 = every query failed.
+Exit codes: 0 = artifacts written (even with per-query errors), 1 = every query failed, or setup error (e.g. missing API key).
 """
 
 import json
@@ -34,7 +34,7 @@ if not oks:
 rows = dedup_by_url(flatten_fanout_rows(oks))
 
 write_jsonl("results.jsonl", rows)
-write_jsonl("errors.jsonl", [{"spec": dict(r.spec), "error": str(r.error)} for r in errs])
+write_jsonl("errors.jsonl", [r.to_dict() for r in errs])
 
 print(f"results.jsonl: {len(rows)} rows, errors.jsonl: {len(errs)} errors")
 print(json.dumps(preview(rows[:3]), indent=2))

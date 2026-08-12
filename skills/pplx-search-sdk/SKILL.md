@@ -1,7 +1,7 @@
 ---
 name: pplx-search-sdk
 description: "Install and use pplx-srch-sdk, the public Python SDK for the Perplexity Search API (import pplx_srch_sdk): live web search and query-relevant page snippets from Python code. Use to search the web from a script or notebook, fan many searches out concurrently, get query-relevant excerpts from specific URLs, build multi-step research pipelines, or handle Search API errors with typed exceptions."
-when_to_use: "Any request like: search the web from Python, pip install pplx-srch-sdk, import pplx_srch_sdk, run many web searches in parallel, fan out search queries, get query-relevant excerpts from URLs in code, batch web research in a script, async search client, handle search rate limits in code."
+when_to_use: "Any request like: search the web from Python, pip install pplx-srch-sdk, import pplx_srch_sdk, run many web searches in parallel, fan out search queries, get query-relevant excerpts from URLs in code, batch web research in a script, async search client, handle search rate limits in code, use the Perplexity Search API from Python, Perplexity search SDK."
 argument-hint: "[search query or URLs]"
 ---
 
@@ -25,7 +25,7 @@ Get an API key at https://www.perplexity.ai/account/api and export it:
 export PERPLEXITY_API_KEY=pplx-...
 ```
 
-Import succeeds without a key; the first sync-facade request raises `AuthenticationError: [401] No API key configured. Set the PERPLEXITY_API_KEY environment variable`, and `AsyncPplxClient()` raises the same error at construction (pitfall 9).
+Import succeeds without a key; a missing key raises `AuthenticationError` at first use (pitfall 9).
 
 ## Web search
 
@@ -37,11 +37,12 @@ for hit in hits:
     print(hit.title, hit.url)
 ```
 
-`search.web` returns a bare `list[WebHit]` - no `.results` wrapper, no response envelope (pitfall 1).
+`search.web` returns a bare `list[WebHit]` (pitfall 1).
 Keep queries short keyword phrases, usually 2-5 meaningful words, one topic per query; no quote marks, `site:`, or boolean `AND`/`OR` - use kwargs like `domains=[...]` and `excluded_domains=[...]` instead.
 Break multi-entity questions into separate single-entity queries and send them through `web_many`, not one long combined query.
 A list passed as the first argument is reformulations of ONE query, up to 10, merged into a single result list (pitfall 2).
-Full kwarg table (domains, country, date bounds, `recency_filter`, token budgets): [references/search.md](references/search.md).
+On non-trivial searches, add `intent=` - one short sentence stating what the search should find or verify; it sharpens which text comes back for each hit without changing which pages are found.
+Full kwarg table (domains, country, date bounds, `recency_filter`, `intent`, token budgets): [references/search.md](references/search.md).
 
 ## Fan-out (many independent queries)
 
@@ -81,7 +82,7 @@ for s in snips:
 ```
 
 One `SnippetResult` per input URL, in input order.
-**Check `error` on every result before trusting `text`** - a successful call can still carry per-URL failures (pitfall 4).
+**Check `error` on every result before trusting `text`** (pitfall 4).
 Use `text`, not `content`; elided regions inside `text` are marked with `…`.
 Token budgets and URL limits: [references/content.md](references/content.md).
 
@@ -89,22 +90,34 @@ Token budgets and URL limits: [references/content.md](references/content.md).
 
 - `search.web(...)` -> `list[WebHit]`; each hit has `{url, title, domain, snippet, date?, last_updated?}`. `snippet` is the text field for the hit and is an empty string when no text is available; `date` is the publication date and `last_updated` the last-modified date.
 - Typed records support attribute reads (`hit.url`), mapping access (`hit["url"]`, `{**hit}`, `hit.keys()`), and `dict(hit)` / `hit.to_dict()` for JSON-serializable rows. Missing optional fields read as `None`; the mapping view contains only populated fields.
-- `search.web_many(...)` -> `list[FanoutResult]`; each exposes `.ok` (success flag), `.spec` (the request kwargs), `.result` (the `list[WebHit]` on success), `.error` (the isolated exception). There is no `.request` attribute.
+- `search.web_many(...)` -> `list[FanoutResult]` with `.ok` / `.spec` / `.result` / `.error` (pitfall 3; details in [references/fanout.md](references/fanout.md)).
 - `content.snippets(...)` -> `list[SnippetResult]`; each has `{url, text?, tokens_count?, error?}`.
 
 ## Errors
 
-Every SDK exception derives from `pplx_srch_sdk.PplxSdkError`; API failures raise subclasses of `pplx_srch_sdk.APIError`: `AuthenticationError` (401), `ForbiddenError` (403), `NotFoundError` (404), `NotAcceptableError` (406), `RateLimitError` (429), `BadRequestError` and `ValidationError` (400), `InternalServerError` (5xx), `ConnectError` (network failure).
+Every SDK exception derives from `pplx_srch_sdk.PplxSdkError`; API failures raise subclasses of `pplx_srch_sdk.APIError`: `AuthenticationError` (401), `ForbiddenError` (403), `NotFoundError` (404), `NotAcceptableError` (406), `TimeoutError` (408, client-side - ~10 s for search, 30 s for snippets, not configurable), `RateLimitError` (429), `BadRequestError` (400), `ValidationError` (422), `InternalServerError` (5xx), `ConnectError` (network failure).
+`TimeoutError` here is `pplx_srch_sdk.TimeoutError`, not the builtin: `except TimeoutError:` will not catch it - catch `APIError` or import it explicitly; it is excluded from `import *`.
+Every `APIError` also carries `e.status_code` (int) and `e.body` (str); branch on `e.status_code`, not the message text.
 
 ```python
-try:
-    hits = pplx_srch_sdk.search.web("query", limit=5)
-except pplx_srch_sdk.RateLimitError:
-    ...  # back off, then retry
-except pplx_srch_sdk.APIError as e:
-    print(e)  # message starts with the HTTP status, e.g. "[400] ..."
+import time
+
+import pplx_srch_sdk
+
+for attempt in range(3):
+    try:
+        hits = pplx_srch_sdk.search.web("query", limit=5)
+        break
+    except pplx_srch_sdk.RateLimitError:
+        if attempt == 2:
+            raise
+        time.sleep(2**attempt)  # bounded backoff: 1 s, then 2 s
+    except pplx_srch_sdk.APIError as e:
+        print(e.status_code, e.body)  # e.g. 400 and the server's error detail
+        break
 ```
 
+The SDK never retries or throttles - each call sends exactly one billable HTTP request. On `RateLimitError`, lower `concurrency`, wait, then re-dispatch only the failed specs.
 Inside `web_many`, per-query API errors land on `FanoutResult.error` instead of raising; a missing API key still raises `AuthenticationError` immediately, before any query is dispatched.
 
 ## Async
@@ -135,7 +148,7 @@ Reuse one client per script (pitfall 7).
 6. **Date filter kwargs use MM/DD/YYYY strings, not ISO dates** (e.g. `published_after_date="7/1/2026"`); padding is optional.
 7. **Do not construct one `AsyncPplxClient` per coroutine inside `asyncio.gather`.** That leaks connections - reuse one client, or stay on `web_many` / `pplx_srch_sdk.utils.fanout`.
 8. **A conflicting `limit` alongside `limit_per_query` on `web_many` raises `TypeError`.** Equal values are accepted but redundant; prefer `limit_per_query` alone, which forwards as `limit=` to each single search.
-9. **A missing key fails at call time, not import time.** `import pplx_srch_sdk` succeeds without `PERPLEXITY_API_KEY`; the first sync-facade call raises `AuthenticationError` with a `[401]` message, and `AsyncPplxClient()` raises the same error eagerly at construction - wrap client creation, not just the awaited calls (as [examples/async_client.py](examples/async_client.py) does).
+9. **A missing key fails at call time, not import time.** `import pplx_srch_sdk` succeeds without `PERPLEXITY_API_KEY`; the first sync-facade call raises `AuthenticationError: [401] No API key configured. Set the PERPLEXITY_API_KEY environment variable`, and `AsyncPplxClient()` raises the same error eagerly at construction - wrap client creation, not just the awaited calls (as [examples/async_client.py](examples/async_client.py) does).
 
 ## Reference index
 

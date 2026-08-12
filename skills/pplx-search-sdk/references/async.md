@@ -22,12 +22,14 @@ asyncio.run(main())
 
 - Async context manager; `client.search.web` and `client.content.snippets` take exactly the same kwargs and return the same shapes as the sync facade.
 - With no key configured, `AsyncPplxClient()` raises `AuthenticationError` at construction, before any request - keep client creation inside your try/except.
+- Constructor kwargs are keyword-only: `AsyncPplxClient(api_key="pplx-...")` supplies the key directly when exporting `PERPLEXITY_API_KEY` is not practical.
 - There is no async `web_many` - use `pplx_srch_sdk.utils.fanout` (below) for concurrent dispatch.
 - Reuse one client per script. Constructing one client per coroutine inside `asyncio.gather` leaks connections.
 
 ## Bounded fan-out with `pplx_srch_sdk.utils.fanout`
 
-`fanout(fn, specs, concurrency=5)` runs `fn(**spec)` for every spec with bounded concurrency and per-call error isolation, returning `list[FanoutResult]` in input order (same envelope as `web_many`, see [fanout.md](fanout.md)).
+`fanout(fn, specs, *, concurrency=5)` runs `fn(**spec)` for every spec with bounded concurrency and per-call error isolation, returning `list[FanoutResult]` in input order (same envelope as `web_many`, see [fanout.md](fanout.md)).
+`concurrency=5` can exceed a key's rate limit; on `RateLimitError` in results, lower it and re-dispatch only the failures.
 
 It works with any async callable - `client.search.web`, `client.content.snippets`, or your own coroutine:
 
@@ -66,5 +68,6 @@ Each spec is shallow-copied and echoed back on `FanoutResult.spec`, so provenanc
 - A concurrency model the `web_many` / `fanout` defaults do not cover.
 - Long-running concurrent state across multiple SDK calls inside one coroutine.
 - Mixing `search.web` and `content.snippets` calls in one bounded dispatch.
+- Forked worker processes (`multiprocessing`): the sync facade raises `RuntimeError` in forked children - use the async client there.
 
 Otherwise stay on the sync facade - `web_many` already gives bounded concurrent search with error isolation.

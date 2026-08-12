@@ -24,7 +24,8 @@ Returns a bare `list[WebHit]`.
 |---|---|---|
 | `queries` (positional) | `str` or `list[str]` | The query, or up to 10 reformulation variants of one query (see below) |
 | `reformulations` | `list[str]` | Alternate reformulations when the positional is a single string |
-| `limit` | `int` | Maximum total results for the whole request (API max 100; larger values are not rejected) |
+| `intent` | `str` | One short sentence stating what the search should find or verify; does not change which pages are found, but sharpens which text comes back for each hit |
+| `limit` | `int` | Maximum total results for the whole request (default 10 per query; the server silently clamps oversized values instead of rejecting them) |
 | `country` | `str` | Country code, such as `"US"` |
 | `domains` | `list[str]` | Only these domains; always a list, even for one domain |
 | `excluded_domains` | `list[str]` | Drop these domains |
@@ -39,6 +40,7 @@ Returns a bare `list[WebHit]`.
 - Short keyword phrases, usually 2-5 meaningful words, one topic per query: `"inflation rate Canada"`, not `"What is the inflation rate in Canada?"`.
 - No quote marks, exact-phrase syntax, `site:`, or boolean `AND`/`OR`/`NOT` - the engine treats them as literal words; use `domains` / `excluded_domains` kwargs instead.
 - Multi-entity questions become separate single-entity queries (`"Brand A protein powder review"` and `"Brand B protein powder review"`), fanned out via `web_many`.
+- On non-trivial searches, add `intent=` - one short sentence on what to find or verify; it sharpens the returned text for each hit without changing which pages are found.
 - For time-sensitive topics, put the explicit date in the query text (`"CPI report March 2026"`); reserve the date kwargs for requests that explicitly bound the result window.
 
 ## Query variants vs independent queries
