@@ -7,21 +7,21 @@ Exit codes: 0 = hits printed, 1 = API error.
 
 import sys
 
-import pplx_sdk
+import pplx_srch_sdk
 
 query = " ".join(sys.argv[1:]) or "rust async runtimes"
 
 try:
-    hits = pplx_sdk.search.web(
+    hits = pplx_srch_sdk.search.web(
         query,
         intent=f"Find current, authoritative pages about: {query}",
         limit=5,
         excluded_domains=["pinterest.com"],
     )
-except pplx_sdk.AuthenticationError as e:
+except pplx_srch_sdk.AuthenticationError as e:
     print(f"auth failed ({e}); export PERPLEXITY_API_KEY", file=sys.stderr)
     sys.exit(1)
-except pplx_sdk.APIError as e:
+except pplx_srch_sdk.APIError as e:
     print(f"search failed: {e}", file=sys.stderr)
     sys.exit(1)
 

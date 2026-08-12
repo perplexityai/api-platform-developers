@@ -1,13 +1,13 @@
 # Content snippets reference
 
-Read this when excerpting known URLs with `pplx_sdk.content.snippets`.
+Read this when excerpting known URLs with `pplx_srch_sdk.content.snippets`.
 
 ## Call shape
 
 ```python
-import pplx_sdk
+import pplx_srch_sdk
 
-snips = pplx_sdk.content.snippets(
+snips = pplx_srch_sdk.content.snippets(
     query="rust async runtimes comparison",
     urls=["https://example.com/a", "https://example.com/b"],
     max_tokens=4096,
@@ -50,4 +50,4 @@ Mapping access works the same as on hits: `s["url"]`, `dict(s)`, `s.to_dict()`; 
 
 ## Fanning out over large URL pools
 
-For more than 50 URLs, or several different queries, chunk the URLs and dispatch with `pplx_sdk.utils.fanout` over the async client - see [async.md](async.md) for the exact pattern.
+For more than 50 URLs, or several different queries, chunk the URLs and dispatch with `pplx_srch_sdk.utils.fanout` over the async client - see [async.md](async.md) for the exact pattern.

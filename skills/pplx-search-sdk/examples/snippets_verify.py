@@ -7,24 +7,24 @@ Exit codes: 0 = snippets printed, 1 = no usable hits or API error.
 
 import sys
 
-import pplx_sdk
+import pplx_srch_sdk
 
 question = " ".join(sys.argv[1:]) or "how do rust async runtimes differ"
 
 try:
-    hits = pplx_sdk.search.web(question, limit=8, intent=f"Verify: {question}")
+    hits = pplx_srch_sdk.search.web(question, limit=8, intent=f"Verify: {question}")
     if not hits:
         print("no hits", file=sys.stderr)
         sys.exit(1)
 
     # One batched call over all candidate URLs beats one call per URL.
-    snips = pplx_sdk.content.snippets(
+    snips = pplx_srch_sdk.content.snippets(
         query=question,
         urls=[hit.url for hit in hits],
         max_tokens=4096,
         max_tokens_per_page=512,
     )
-except pplx_sdk.APIError as e:
+except pplx_srch_sdk.APIError as e:
     print(f"request failed: {e}", file=sys.stderr)
     sys.exit(1)
 

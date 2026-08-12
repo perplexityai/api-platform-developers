@@ -5,9 +5,9 @@ Read this when running many independent searches, or turning fan-out output into
 ## `search.web_many`
 
 ```python
-import pplx_sdk
+import pplx_srch_sdk
 
-results = pplx_sdk.search.web_many(
+results = pplx_srch_sdk.search.web_many(
     [
         {"query": "python 3.13 release notes"},
         {"query": "python 3.13 whats new", "domains": ["docs.python.org"]},
@@ -31,20 +31,20 @@ One `FanoutResult` per input query, in input order:
 - `r.ok` - `True` when the call succeeded.
 - `r.spec` - the request kwargs for that call (provenance).
 - `r.result` - the `list[WebHit]` on success.
-- `r.error` - the isolated exception on failure (a typed `pplx_sdk` error; it does not raise).
+- `r.error` - the isolated exception on failure (a typed `pplx_srch_sdk` error; it does not raise).
 
 There is no `.request` attribute. One failed query never fails the batch - always branch on `r.ok`.
 The exception: setup problems such as a missing `PERPLEXITY_API_KEY` raise before any query is dispatched.
 
 ## Artifact pattern
 
-Split successes from errors, flatten to rows, dedup, persist as JSONL - all helpers live in `pplx_sdk.utils`:
+Split successes from errors, flatten to rows, dedup, persist as JSONL - all helpers live in `pplx_srch_sdk.utils`:
 
 ```python
-import pplx_sdk
-from pplx_sdk.utils import dedup_by_url, flatten_fanout_rows, partition, write_jsonl
+import pplx_srch_sdk
+from pplx_srch_sdk.utils import dedup_by_url, flatten_fanout_rows, partition, write_jsonl
 
-raw = pplx_sdk.search.web_many(QUERIES, limit_per_query=10)
+raw = pplx_srch_sdk.search.web_many(QUERIES, limit_per_query=10)
 oks, errs = partition(raw, lambda r: r.ok)
 rows = dedup_by_url(flatten_fanout_rows(oks))
 
@@ -60,8 +60,8 @@ print(f"results.jsonl\nsearch: {len(rows)} rows, {len(errs)} errors")
 
 ## Resumable batches
 
-For pipelines that must survive interruption, `pplx_sdk.utils.Checkpoint(workspace)` stores per-key JSONL fragments with atomic writes: `has(key)` to skip completed batches, `record(key, rows)` to persist one batch, `read_all()` to stream every stored row back.
-Combine it with `pplx_sdk.utils.fanout` (see [async.md](async.md)) for checkpointed concurrent dispatch: build one key per batch, skip keys that `has()`, and rebuild flat outputs from `read_all()` at the end.
+For pipelines that must survive interruption, `pplx_srch_sdk.utils.Checkpoint(workspace)` stores per-key JSONL fragments with atomic writes: `has(key)` to skip completed batches, `record(key, rows)` to persist one batch, `read_all()` to stream every stored row back.
+Combine it with `pplx_srch_sdk.utils.fanout` (see [async.md](async.md)) for checkpointed concurrent dispatch: build one key per batch, skip keys that `has()`, and rebuild flat outputs from `read_all()` at the end.
 
 ## Keep errors visible
 

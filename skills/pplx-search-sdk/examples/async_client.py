@@ -1,4 +1,4 @@
-"""Async client with bounded custom fan-out via pplx_sdk.utils.fanout.
+"""Async client with bounded custom fan-out via pplx_srch_sdk.utils.fanout.
 
 Usage: python async_client.py
 Needs: pip install pplx-srch-sdk; PERPLEXITY_API_KEY exported.
@@ -8,8 +8,8 @@ Exit codes: 0 = at least one search succeeded, 1 = all failed.
 import asyncio
 import sys
 
-from pplx_sdk import AsyncPplxClient, PplxSdkError
-from pplx_sdk.utils import fanout
+from pplx_srch_sdk import AsyncPplxClient, PplxSdkError
+from pplx_srch_sdk.utils import fanout
 
 SPECS = [
     {"query": "python 3.13 release notes", "limit": 5},

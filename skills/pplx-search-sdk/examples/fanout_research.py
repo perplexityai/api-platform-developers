@@ -8,8 +8,8 @@ Exit codes: 0 = artifacts written (even with per-query errors), 1 = every query 
 import json
 import sys
 
-import pplx_sdk
-from pplx_sdk.utils import dedup_by_url, flatten_fanout_rows, partition, preview, write_jsonl
+import pplx_srch_sdk
+from pplx_srch_sdk.utils import dedup_by_url, flatten_fanout_rows, partition, preview, write_jsonl
 
 QUERIES = [
     {"query": "yellowstone national park visitor numbers 2025"},
@@ -19,8 +19,8 @@ QUERIES = [
 
 # Per-query failures land on r.error; only setup problems (e.g. missing key) raise.
 try:
-    raw = pplx_sdk.search.web_many(QUERIES, limit_per_query=10, concurrency=5)
-except pplx_sdk.PplxSdkError as e:
+    raw = pplx_srch_sdk.search.web_many(QUERIES, limit_per_query=10, concurrency=5)
+except pplx_srch_sdk.PplxSdkError as e:
     print(f"fan-out failed: {e}", file=sys.stderr)
     sys.exit(1)
 

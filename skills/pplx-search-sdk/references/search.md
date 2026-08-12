@@ -1,13 +1,13 @@
 # Search reference
 
-Read this when composing `pplx_sdk.search.web` queries or filters.
+Read this when composing `pplx_srch_sdk.search.web` queries or filters.
 
 ## Call shape
 
 ```python
-import pplx_sdk
+import pplx_srch_sdk
 
-hits = pplx_sdk.search.web(
+hits = pplx_srch_sdk.search.web(
     "python 3.13 release notes",
     intent="Confirm the official Python 3.13 changelog on python.org",
     limit=10,
@@ -48,7 +48,7 @@ Returns a bare `list[WebHit]`.
 A list as the first argument sends ONE request whose extra strings are reformulations of the same question; the return is a single merged `list[WebHit]`:
 
 ```python
-hits = pplx_sdk.search.web([
+hits = pplx_srch_sdk.search.web([
     "python 3.13 release notes",
     "python 3.13 whats new",
 ])
@@ -65,7 +65,7 @@ hits = pplx_sdk.search.web([
 - `recency_filter` can combine with the last-updated range but NOT with `published_after_date`/`published_before_date` - the server rejects that combination.
 
 ```python
-hits = pplx_sdk.search.web(
+hits = pplx_srch_sdk.search.web(
     "transformer architecture attention mechanism",
     intent="Survey transformer-attention writeups published in early March 2025",
     published_after_date="3/1/2025",
