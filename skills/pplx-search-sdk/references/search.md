@@ -31,7 +31,6 @@ Returns a bare `list[WebHit]`.
 | `excluded_domains` | `list[str]` | Drop these domains |
 | `published_after_date` / `published_before_date` | `str` | Publication-date bounds, MM/DD/YYYY |
 | `updated_after_date` / `updated_before_date` | `str` | Last-updated bounds, MM/DD/YYYY |
-| `recency_filter` | `str` | Relative window: `"hour"`, `"day"`, `"week"`, `"month"`, `"year"` |
 | `max_tokens` / `max_tokens_per_page` | `int` | Response token budgets, total and per page |
 | `search_context_size` | `str` | `"low"`, `"medium"`, `"high"`; omit when passing explicit token budgets |
 
@@ -58,11 +57,11 @@ hits = pplx_srch_sdk.search.web([
 - `limit` caps the whole merged result set, not each variant, so a small `limit` on many variants defeats the reformulation; omit it and the default scales with the variant count.
 - Looking up several different things = `web_many([...], limit_per_query=...)`, one independent search each. See [fanout.md](fanout.md).
 
-## Date and recency filters
+## Date filters
 
 - Explicit bounds are MM/DD/YYYY strings such as `"3/1/2025"`; padding is optional. Use a pair to bound a range or a single side for an open cutoff.
 - The publication-date range and the last-updated range can be combined.
-- `recency_filter` can combine with the last-updated range but NOT with `published_after_date`/`published_before_date` - the server rejects that combination.
+- `published_after_date`/`published_before_date` cannot be combined with `recency_filter`; the server rejects these combinations.
 
 ```python
 hits = pplx_srch_sdk.search.web(

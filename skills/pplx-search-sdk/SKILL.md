@@ -25,7 +25,7 @@ Get an API key at https://www.perplexity.ai/account/api and export it:
 export PERPLEXITY_API_KEY=pplx-...
 ```
 
-Import succeeds without a key; a missing key raises `AuthenticationError` at first use (pitfall 9).
+Import succeeds without a key; a missing key raises `AuthenticationError` at first use (pitfall 8).
 
 ## Web search
 
@@ -42,7 +42,7 @@ Keep queries short keyword phrases, usually 2-5 meaningful words, one topic per 
 Break multi-entity questions into separate single-entity queries and send them through `web_many`, not one long combined query.
 A list passed as the first argument is reformulations of ONE query, up to 10, merged into a single result list (pitfall 2).
 On non-trivial searches, add `intent=` - one short sentence stating what the search should find or verify; it sharpens which text comes back for each hit without changing which pages are found.
-Full kwarg table (domains, country, date bounds, `recency_filter`, `intent`, token budgets): [references/search.md](references/search.md).
+Full kwarg table (domains, country, date bounds, `intent`, token budgets): [references/search.md](references/search.md).
 
 ## Fan-out (many independent queries)
 
@@ -136,7 +136,7 @@ asyncio.run(main())
 ```
 
 Drop to `AsyncPplxClient` for a custom concurrency model or long-lived concurrent state; there is no async `web_many` - use `pplx_srch_sdk.utils.fanout` with `client.search.web` (see [references/async.md](references/async.md)).
-Reuse one client per script (pitfall 7).
+Reuse one client per script (pitfall 6).
 
 ## Top pitfalls
 
@@ -144,11 +144,10 @@ Reuse one client per script (pitfall 7).
 2. **A list passed to `web()` is reformulations of ONE query, not a batch.** Up to 10 variants merge into a single result list, and `limit` caps that whole merged set, not each variant. N distinct questions = `web_many` with `limit_per_query`.
 3. **`FanoutResult` exposes `spec`/`result`/`error`/`ok`.** `r.result` is the hit list and `r.spec` the request kwargs; there is no `.request` attribute. Always branch on `r.ok` - per-query failures ride the batch as `r.error`, they do not raise.
 4. **A successful `content.snippets` call does not mean every URL succeeded.** Per-URL failures set `results[i].error` and leave `text` unset; check `error` on each result before using `text`.
-5. **`recency_filter` cannot combine with the publication-date range.** The server rejects `recency_filter` together with `published_after_date`/`published_before_date` - a wasted round trip, not caught client-side.
-6. **Date filter kwargs use MM/DD/YYYY strings, not ISO dates** (e.g. `published_after_date="7/1/2026"`); padding is optional.
-7. **Do not construct one `AsyncPplxClient` per coroutine inside `asyncio.gather`.** That leaks connections - reuse one client, or stay on `web_many` / `pplx_srch_sdk.utils.fanout`.
-8. **A conflicting `limit` alongside `limit_per_query` on `web_many` raises `TypeError`.** Equal values are accepted but redundant; prefer `limit_per_query` alone, which forwards as `limit=` to each single search.
-9. **A missing key fails at call time, not import time.** `import pplx_srch_sdk` succeeds without `PERPLEXITY_API_KEY`; the first sync-facade call raises `AuthenticationError: [401] No API key configured. Set the PERPLEXITY_API_KEY environment variable`, and `AsyncPplxClient()` raises the same error eagerly at construction - wrap client creation, not just the awaited calls (as [examples/async_client.py](examples/async_client.py) does).
+5. **Date filter kwargs use MM/DD/YYYY strings, not ISO dates** (e.g. `published_after_date="7/1/2026"`); padding is optional. `published_after_date`/`published_before_date` cannot be combined with `recency_filter`; the server rejects these combinations.
+6. **Do not construct one `AsyncPplxClient` per coroutine inside `asyncio.gather`.** That leaks connections - reuse one client, or stay on `web_many` / `pplx_srch_sdk.utils.fanout`.
+7. **A conflicting `limit` alongside `limit_per_query` on `web_many` raises `TypeError`.** Equal values are accepted but redundant; prefer `limit_per_query` alone, which forwards as `limit=` to each single search.
+8. **A missing key fails at call time, not import time.** `import pplx_srch_sdk` succeeds without `PERPLEXITY_API_KEY`; the first sync-facade call raises `AuthenticationError: [401] No API key configured. Set the PERPLEXITY_API_KEY environment variable`, and `AsyncPplxClient()` raises the same error eagerly at construction - wrap client creation, not just the awaited calls (as [examples/async_client.py](examples/async_client.py) does).
 
 ## Reference index
 
