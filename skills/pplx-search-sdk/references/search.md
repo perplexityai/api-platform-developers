@@ -61,6 +61,7 @@ hits = pplx_srch_sdk.search.web([
 
 - Explicit bounds are MM/DD/YYYY strings such as `"3/1/2025"`; padding is optional. Use a pair to bound a range or a single side for an open cutoff.
 - The publication-date range and the last-updated range can be combined.
+- `published_after_date`/`published_before_date` cannot be combined with `recency_filter`; the server rejects these combinations.
 
 ```python
 hits = pplx_srch_sdk.search.web(
