@@ -24,6 +24,10 @@ claude --plugin-dir .
 
 Invoke a skill with `/perplexity-platform:migrate-sonar-to-agent-api [path]`.
 
+### Agent Plugins
+
+This repository is packaged as an [Agent Plugin](https://agent-plugins.org), so clients that support the standard can install it directly from this repository. One install gets the skills and the docs MCP server; no API key is required.
+
 ### Codex CLI and other Agent Skills clients
 
 Codex plugin flow (skills + docs MCP in one install): `codex plugin marketplace add perplexityai/api-platform-developers`, then install `perplexity-platform` from `/plugins`.

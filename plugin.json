@@ -1,0 +1,10 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "perplexity-platform",
+  "description": "Skills for building on the Perplexity API Platform (Agent API, Search API, Embeddings).",
+  "author": {
+    "name": "Perplexity"
+  },
+  "homepage": "https://docs.perplexity.ai",
+  "repository": "https://github.com/perplexityai/api-platform-developers"
+}
