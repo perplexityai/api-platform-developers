@@ -33,6 +33,17 @@ jobs:
           npx --yes ajv-cli@5 validate --spec=draft2020 -s /tmp/mcp.schema.json -d mcp.json
           echo "✓ plugin.json and mcp.json conform to Agent Plugins 1.0.0 schemas"
 
+      - name: Check Version Sync
+        run: |
+          ROOT=$(jq -r '.version' plugin.json)
+          CODEX=$(jq -r '.version' .codex-plugin/plugin.json)
+          echo "plugin.json=$ROOT .codex-plugin/plugin.json=$CODEX"
+          if [ "$ROOT" != "$CODEX" ]; then
+            echo "Error: version mismatch between plugin.json and .codex-plugin/plugin.json"
+            exit 1
+          fi
+          echo "✓ Versions are in sync"
+
       - name: Check Skill Frontmatter
         run: |
           for f in skills/*/SKILL.md; do
