@@ -1,0 +1,42 @@
+name: Validate Plugin Configuration
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '20'
+
+      - name: Validate JSON Syntax
+        run: |
+          for f in plugin.json mcp.json .mcp.json .claude-plugin/plugin.json .claude-plugin/marketplace.json .codex-plugin/plugin.json .agents/plugins/marketplace.json; do
+            jq empty "$f"
+            echo "✓ $f is valid JSON"
+          done
+
+      - name: Validate Agent Plugins Manifests
+        run: |
+          curl -fsSL --retry 3 -o /tmp/plugin.schema.json https://agent-plugins.org/schemas/1.0.0/plugin.schema.json
+          curl -fsSL --retry 3 -o /tmp/mcp.schema.json https://agent-plugins.org/schemas/1.0.0/mcp.schema.json
+          npx --yes ajv-cli@5 validate --spec=draft2020 -s /tmp/plugin.schema.json -d plugin.json
+          npx --yes ajv-cli@5 validate --spec=draft2020 -s /tmp/mcp.schema.json -d mcp.json
+          echo "✓ plugin.json and mcp.json conform to Agent Plugins 1.0.0 schemas"
+
+      - name: Check Skill Frontmatter
+        run: |
+          for f in skills/*/SKILL.md; do
+            head -20 "$f" | grep -q '^name:' || { echo "Error: $f missing name frontmatter"; exit 1; }
+            head -20 "$f" | grep -q '^description:' || { echo "Error: $f missing description frontmatter"; exit 1; }
+            echo "✓ $f has name and description"
+          done
