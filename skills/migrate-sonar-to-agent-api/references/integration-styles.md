@@ -137,6 +137,44 @@ response = client.responses.create(
 print(response.output_text)
 ```
 
+## Vercel AI SDK (`@ai-sdk/open-responses`)
+
+For Next.js / React apps using the [Vercel AI SDK](https://ai-sdk.dev), reach the Agent API through the [`@ai-sdk/open-responses`](https://ai-sdk.dev/providers/ai-sdk-providers/open-responses) provider, pointed at Perplexity's `/v1/responses` endpoint (the OpenAI-compatible alias of `/v1/agent`). A runnable, pinned example lives at [`examples/vercel-ai-sdk/agent-api-openresponses.mjs`](../examples/vercel-ai-sdk/agent-api-openresponses.mjs) — see its [README](../examples/vercel-ai-sdk/README.md) for setup and the full mapping.
+
+Key points specific to this integration style:
+
+- **Pin the versions.** `ai` and `@ai-sdk/open-responses` move fast; a floating install can pull a release that changes the provider protocol or the `createOpenResponses` signature. Verified-compatible pair: `ai@7.0.93`, `@ai-sdk/open-responses@2.0.39`.
+- **No models.dev dependency.** `@ai-sdk/open-responses` does not use the models.dev registry at runtime. The model id passed to the provider factory (`perplexity("openai/gpt-5.6-sol")`) is sent straight through to the API. The Agent API path keeps working even if models.dev is unavailable or changes — so do not route model selection through a models.dev-backed registry for Perplexity.
+- **Web search is NOT automatic.** Add `tools: [{ type: "web_search" }]` to the request body via a `fetch` hook — the AI SDK has no first-class option for Perplexity's hosted tool types. The same hook injects a `preset` (and drops `model`) if you use presets instead of raw model ids.
+- **Citations are not on the result.** `@ai-sdk/open-responses` does not surface sources on the result object. Read the `search_results` item from the raw `output` array in the `fetch` hook (skip for streaming, where the body is an event stream).
+- **200-wrapped failures.** Failed/cancelled runs return HTTP 200 with a non-`completed` `status`. Branch on `status` in the `fetch` hook, not on the HTTP code.
+- **Create the provider on the server** (Route Handler, Server Action, or API route) so `PERPLEXITY_API_KEY` never reaches the browser.
+
+Minimal shape:
+
+```typescript
+import { createOpenResponses } from "@ai-sdk/open-responses";
+import { generateText } from "ai";
+
+const perplexity = createOpenResponses({
+  name: "perplexity",
+  url: "https://api.perplexity.ai/v1/responses",
+  apiKey: process.env.PERPLEXITY_API_KEY,
+});
+
+const { text } = await generateText({
+  model: perplexity("openai/gpt-5.6-sol"), // passed through verbatim; not resolved via models.dev
+  prompt: "What happened in AI this week?",
+  fetch: async (url, options) => {
+    const body = JSON.parse(options.body);
+    body.tools = [{ type: "web_search" }];
+    return fetch(url, { ...options, body: JSON.stringify(body) });
+  },
+});
+```
+
+Presets go through the same `fetch` hook (`body.preset = "fast"` and drop `model`). The Sonar → preset mapping is in [models-and-presets.md](models-and-presets.md).
+
 ## Framework bridges
 
 First, verify which client actually calls Perplexity.
