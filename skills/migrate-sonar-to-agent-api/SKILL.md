@@ -39,6 +39,8 @@ Classify before touching code, and KEEP the style - do not "upgrade" raw HTTP to
   Same client construction, same `PERPLEXITY_API_KEY` env var.
 - **(d) Framework bridge** (LangChain `ChatPerplexity`, LlamaIndex Perplexity LLM, OpenAI Agents SDK):
   read [integration-styles.md](references/integration-styles.md) - it has the concrete Agents SDK class swap and the ranked options for LangChain/LlamaIndex.
+- **(e) Vercel AI SDK** (`@ai-sdk/open-responses`, Next.js/React):
+  read [integration-styles.md](references/integration-styles.md) and the runnable, pinned example at [examples/vercel-ai-sdk/](examples/vercel-ai-sdk/) - it points `createOpenResponses` at Perplexity's `/v1/responses` endpoint, pins `@ai-sdk/open-responses@2.0.39` + `ai@7.0.93`, and is independent of models.dev (the model id is passed straight through, no registry lookup).
 
 **Classification trap:** the Perplexity call may live OUTSIDE the framework as a sibling SDK client.
 Find which client actually hits `api.perplexity.ai` and migrate that call site by its own style.
