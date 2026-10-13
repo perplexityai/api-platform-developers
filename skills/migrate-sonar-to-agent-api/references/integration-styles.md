@@ -176,6 +176,7 @@ Whichever you pick, state the choice explicitly in your migration notes.
 - `max_tool_calls: 0` disables tool calls entirely - the closest analog of `disable_search` when a preset forces tools you cannot remove (note: it disables ALL tools).
 - Built-in tools, one line each:
   - `web_search` - grounded search; filters per [request-mapping.md](request-mapping.md); `max_results` <= 50.
+  - `image_search` - image retrieval; `max_results` 1..30; domain/format filters per [request-mapping.md](request-mapping.md); returns `image_search_results` output items.
   - `fetch_url` - fetch pages; `max_urls` 1..10; `total_budget_tokens` <= 120000.
   - `people_search` - professional profiles; bills as `search_people`.
   - `finance_search` - quotes, fundamentals, filings; replaces `search_mode: "sec"`.

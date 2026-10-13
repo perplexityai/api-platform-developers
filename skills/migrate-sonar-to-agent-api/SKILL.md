@@ -86,7 +86,7 @@ Leave framework-internal LLMs pointed at other providers alone.
    A consumer that only exits on `response.completed` hangs on failed runs.
 
 6. **No `perplexity/sonar-pro` slug exists.**
-   Map `sonar-pro` per the two-option rule (preset `"low"` vs `perplexity/sonar` + web_search) in [models-and-presets.md](references/models-and-presets.md).
+   Map `sonar-pro` per the two-option rule (preset `"fast"` vs `perplexity/sonar` + web_search) in [models-and-presets.md](references/models-and-presets.md).
 
 7. **`max_output_tokens` is REQUIRED for `anthropic/*` models** (400 otherwise); values under 16 floor to 16.
    On presets and reasoning models, tight caps can be consumed by reasoning tokens before any text or search appears - size generously or omit.
@@ -127,7 +127,7 @@ Leave framework-internal LLMs pointed at other providers alone.
    The live run is MANDATORY when an API key is available - compile-clean SDK code can still crash on call (see the typed-kwarg trap in integration-styles.md); if you truly cannot run it, say so explicitly in your summary.
 
 **Minimal-diff rule:** keep the author's structure, naming, and voice; do not refactor unrelated code.
-When a Sonar feature has no Agent equivalent (images, related questions, academic search mode), apply the documented workaround from [request-mapping.md](references/request-mapping.md) if it is small.
+When a Sonar feature has no direct Agent equivalent (related questions, academic search mode), apply the documented workaround from [request-mapping.md](references/request-mapping.md) if it is small.
 For `return_related_questions` specifically, use the lightweight prompt-delimiter recipe in request-mapping.md - it fits free-text flows too.
 If no workaround fits, remove the feature AND call the removal out in your migration notes; never drop user-facing output silently.
 

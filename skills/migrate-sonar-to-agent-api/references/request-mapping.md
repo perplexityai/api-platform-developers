@@ -27,7 +27,7 @@ Offering the tool does not guarantee the model calls it; for citation-critical f
 
 | Sonar param | Agent API | Notes |
 |---|---|---|
-| `messages` | `input` | String for a single user turn; else array of `{role, content}` items (roles: user, assistant, system, developer). System prompt: keep as a `role:"system"` input item or move to top-level `instructions`. |
+| `messages` | `input` | String for a single user turn; else array of `{type:"message", role, content}` items (roles: user, assistant, system, developer). Include the message `type` for SDK schema validation. System prompt: keep as a `role:"system"` input item or move to top-level `instructions`. |
 | (system message) | `instructions` or input item | With a preset, `instructions` REPLACES the preset prompt (never appends); `""` clears it. |
 | `model` | `model` | New slugs - see [models-and-presets.md](models-and-presets.md). Or `preset`, or `models` (fallback list, max 5). |
 | `max_tokens` / `max_completion_tokens` | `max_output_tokens` | REQUIRED when model is `anthropic/*` (else 400 "max_output_tokens is required when using Anthropic models"). Values under 16 are floored to 16. |
@@ -39,7 +39,7 @@ Offering the tool does not guarantee the model calls it; for citation-critical f
 | `search_recency_filter` | `tools[web_search].filters.search_recency_filter` | `hour\|day\|week\|month\|year`; mutually exclusive with the after/before date filters. |
 | `search_after_date_filter`, `search_before_date_filter` | same names inside `tools[web_search].filters` | Format `MM/DD/YYYY`. |
 | `last_updated_after_filter`, `last_updated_before_filter` | same names inside `tools[web_search].filters` | Format `MM/DD/YYYY`. |
-| `web_search_options.search_context_size` | `tools[web_search].search_context_size` | Sits on the tool object, NOT inside `filters`. |
+| `web_search_options.search_context_size` | No named-size equivalent | Set explicit `max_tokens` and `max_tokens_per_page` budgets on the `web_search` tool, NOT inside `filters`. Do not forward `search_context_size`. |
 | `web_search_options.user_location` | `tools[web_search].user_location` | On the tool object, NOT inside `filters`. `{latitude, longitude, country, region, city}`. |
 | `num_search_results` | `tools[web_search].max_results` | 1..50. |
 | `tools` (custom functions) | `tools` with `{type:"function", name, description, parameters, strict}` | Name and description at the tool's top level (Responses style), not nested under `function`. Watch reserved names - see [integration-styles.md](integration-styles.md). |
@@ -47,6 +47,15 @@ Offering the tool does not guarantee the model calls it; for citation-critical f
 | `parallel_tool_calls` | unchanged | Default true. |
 | `language_preference` | unchanged | |
 | `image_url` content part | `input_image` content part | `{"type":"input_image","image_url":"..."}` (data URI or HTTPS URL, <= 2048 chars). |
+| `file_url` / `pdf_url` content part | `input_file` content part | Use exactly one of base64 `file_data` or public HTTPS `file_url`; see the document-input example below. Model/provider restrictions apply. |
+| `return_images` | Add `{"type":"image_search"}` to `tools` | The model decides when to call it; force it with `tool_choice: {"type":"image_search"}` if needed. |
+| `num_images` | `tools[image_search].max_results` | 1..30; defaults to 5. |
+| `image_domain_filter` | `tools[image_search].filters.domain_filter` | Up to 10 domains; either allowlist or `-`-prefixed denylist, not both. |
+| `image_format_filter` | `tools[image_search].filters.format_filter` | Up to 10 formats from `bmp`, `gif`, `jpeg`, `png`, `webp`, `svg`. |
+
+Image results are returned in `output[]` items with `type: "image_search_results"`, not Sonar's top-level `images`.
+Read `results[].image_url` and `results[].origin_url`; handle empty results and tool errors.
+See [Image Search](https://docs.perplexity.ai/docs/agent-api/tools/image-search).
 
 ## REMOVE list (any leftover = 400)
 
@@ -55,8 +64,7 @@ Offering the tool does not guarantee the model calls it; for citation-critical f
 | `disable_search` | REMOVE | Omit the `web_search` tool. With a preset, preset tools stay enabled - there is no public field to disable them; `max_tool_calls: 0` disables ALL tool calls. |
 | `enable_search_classifier` | REMOVE | Provide `web_search` and let the model decide when to call it. |
 | `search_mode: "sec"` | REMOVE | Use the `finance_search` tool instead. |
-| `search_mode: "academic"` | REMOVE | No equivalent. |
-| `return_images`, `image_domain_filter`, `image_format_filter` | REMOVE | Prompt for image URLs plus a structured-output schema. |
+| `search_mode: "academic"` | REMOVE | No direct equivalent; use `web_search` with domain filters and prompting. |
 | `return_related_questions` | REMOVE | Do not silently drop this user-facing feature - see the recipe below the table. |
 | `presence_penalty`, `frequency_penalty` | REMOVE | No equivalent. They may appear as echo-only zeros in responses; they are not settable. |
 | `stop` | REMOVE | No equivalent. |
@@ -65,9 +73,33 @@ Offering the tool does not guarantee the model calls it; for citation-critical f
 | `logprobs`, `top_logprobs` | REMOVE | Some such fields are accepted but have no effect; do not carry them over. |
 | `web_search_options.search_type` / pro search | REMOVE | Use `max_steps` (1..100) or a preset for multi-step behavior. |
 | `search_language_filter` | REMOVE | No equivalent. |
-| `return_videos`, `num_images`, `num_videos`, `media_response` | REMOVE | No equivalent. |
+| `return_videos`, `num_videos`, `media_response` | REMOVE | No equivalent. |
 | `search_mode`, `web_search_options` (the container fields themselves) | REMOVE | Contents relocate per the table above; the containers must not remain. |
-| `file_url` / `pdf_url` / `video_url` content parts | REMOVE | No public equivalent on the Agent API. |
+| `video_url` content part | REMOVE | No public equivalent on the Agent API. |
+
+### Document input
+
+Put document parts inside a user message with an explicit `type: "message"`:
+
+```json
+{
+  "model": "openai/gpt-6-luna",
+  "input": [{
+    "type": "message",
+    "role": "user",
+    "content": [
+      {"type": "input_text", "text": "Summarize this document."},
+      {"type": "input_file", "file_url": "https://example.com/report.pdf"}
+    ]
+  }]
+}
+```
+
+For inline documents, replace `file_url` with base64 `file_data` and optionally `filename`.
+Do not use `file_id`. Native input supports PDF, DOC, DOCX, TXT, and RTF, subject to model/provider restrictions.
+The limit is 30 active documents and 50 MiB of combined decoded inline bytes, including inherited documents - not Sonar's per-file allowance.
+Use `previous_response_id` to reuse inline documents without resending them; browser tools cannot be combined with document inputs or document continuations.
+See [Working with Files](https://docs.perplexity.ai/docs/agent-api/working-with-files) and the [request schema](https://docs.perplexity.ai/api-reference/agent-post) before migrating attachments.
 
 ### Related-questions recipe (`return_related_questions` replacement)
 
@@ -96,7 +128,7 @@ Only remove the feature if none of these fit, and call the removal out in the mi
 
 | Limit | Value / behavior |
 |---|---|
-| Request body | <= 32 MiB, else 413 `payload_too_large` |
+| Document request body | <= 72 MiB including base64, prompts, and other fields; decoded inline documents have a separate 50 MiB combined limit |
 | `search_domain_filter` | <= 20 entries, scheme-less, <= 253 chars each |
 | `models` fallback chain | <= 5 |
 | `metadata` | <= 16 keys; key <= 64; value <= 512 |
