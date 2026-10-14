@@ -30,7 +30,7 @@ Grep the final diff; every hit must be intentional legacy prose (e.g. "migrated 
 
 - `chat.completions`
 - `choices[0]`
-- `max_tokens` (as a request field; `max_output_tokens` is fine)
+- `max_tokens` (as a request field; `max_output_tokens` and `tools[web_search].max_tokens` are fine)
 - `search_recency_filter` at the top level of a request body (inside `tools[web_search].filters` is fine)
 - `citations` (top-level response access)
 - `delta.content`

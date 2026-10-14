@@ -116,6 +116,21 @@ def _inside_tool_filters(lines, idx):
     return any(NESTED_FILTERS_RX.search(lines[j]) for j in range(lo, idx + 1))
 
 
+WEB_SEARCH_BUDGET_RX = re.compile(r"[\"']web_search[\"']|\bmax_tokens_per_page\b")
+
+
+def _web_search_budget(lines, idx):
+    """True when a max_tokens hit on line idx (0-based) is a web_search tool
+    budget, i.e. web_search or max_tokens_per_page appears on that line or in
+    the 4 lines before it."""
+    lo = max(0, idx - 4)
+    return any(WEB_SEARCH_BUDGET_RX.search(lines[j]) for j in range(lo, idx + 1))
+
+
+def _only_max_tokens(rx, line):
+    return {m.group(0) for m in rx.finditer(line)} == {"max_tokens"}
+
+
 def scan_lines(lines, loc_fmt="L{n}"):
     """Scan an iterable of lines; yield (category, location, snippet, label)."""
     lines = list(lines)
@@ -130,6 +145,9 @@ def scan_lines(lines, loc_fmt="L{n}"):
                 if (label == "Sonar request param" and FILTER_PARAM_RX.search(line)
                         and not re.search(r"\bmax_tokens\b|\bweb_search_options\b|\bsearch_mode\b", line)
                         and _inside_tool_filters(lines, n - 1)):
+                    continue
+                if (label == "Sonar request param" and _only_max_tokens(rx, line)
+                        and _web_search_budget(lines, n - 1)):
                     continue
                 seen.add((category, label))
                 findings.append((category, loc_fmt.format(n=n), snippet(line), label))

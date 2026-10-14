@@ -41,7 +41,37 @@ ABSENT=(
   "\\[[\"']citations[\"']\\]|\\.citations\\b|get\\([\"']citations[\"']"
   "[\"']sonar(-[a-z]+)*[\"']"
 )
+# web_search tool budgets (max_tokens next to web_search or max_tokens_per_page)
+# are valid Agent API fields; only request-level max_tokens is a leftover.
+request_max_tokens() {
+  hit "(^|[^_a-zA-Z])max_tokens\\b" | "$PY" -c '
+import re, sys
+from collections import defaultdict
+budget = re.compile(r"[\"\x27]web_search[\"\x27]|\bmax_tokens_per_page\b")
+hits = defaultdict(list)
+for row in sys.stdin:
+    path, num, _ = row.split(":", 2)
+    hits[path].append(int(num))
+for path, nums in hits.items():
+    lines = open(path, encoding="utf-8", errors="ignore").read().splitlines()
+    for n in nums:
+        window = lines[max(0, n - 5):n]
+        if not any(budget.search(line) for line in window):
+            print(f"{path}:{n}:{lines[n - 1]}")
+'
+}
+
 for pat in "${ABSENT[@]}"; do
+  if [ "$pat" = "(^|[^_a-zA-Z])max_tokens\\b" ]; then
+    if [ -n "$(request_max_tokens)" ]; then
+      echo "FAIL leftover: $pat"
+      request_max_tokens | head -3
+      fail=1
+    else
+      echo "  ok: no $pat"
+    fi
+    continue
+  fi
   if hit "$pat" >/dev/null; then
     echo "FAIL leftover: $pat"
     hit "$pat" | head -3

@@ -136,7 +136,7 @@ If no workaround fits, remove the feature AND call the removal out in your migra
 - Compile or typecheck every changed file.
 - Run one real request per distinct call shape against production, with a small `max_output_tokens` and a cheap model (except on presets and reasoning models - see pitfall 7).
 - Capture real response JSON for any printed samples; never fabricate response JSON.
-- Grep for leftovers: `chat.completions`, `choices[0]`, `max_tokens` (as a request field), top-level `search_recency_filter`, `citations`, `delta.content`, `sonar-` model slugs.
+- Grep for leftovers: `chat.completions`, `choices[0]`, `max_tokens` (as a request field, not a `web_search` tool budget), top-level `search_recency_filter`, `citations`, `delta.content`, `sonar-` model slugs.
   Every hit must be intentional legacy prose.
 - Full checklist in [verification.md](references/verification.md).
 
