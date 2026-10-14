@@ -63,7 +63,8 @@ PATTERNS = [
                 r"|search_after_date_filter|search_before_date_filter"
                 r"|last_updated_(?:after|before)_filter|web_search_options"
                 r"|search_mode|disable_search|enable_search_classifier"
-                r"|return_images|return_related_questions|num_search_results"
+                r"|return_images|image_domain_filter|image_format_filter|num_images"
+                r"|return_related_questions|num_search_results|pdf_url"
                 r"|presence_penalty|frequency_penalty|top_k|max_tokens)\b"),
      "Sonar request param"),
     ("param",

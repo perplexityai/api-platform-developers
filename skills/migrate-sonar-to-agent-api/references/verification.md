@@ -48,4 +48,4 @@ For quality-sensitive flows, A/B compare a sample of real prompts before cutover
 Cross-check the live documentation - it is canonical for API facts and may be newer than this skill:
 the migration guide at https://docs.perplexity.ai/docs/agent-api/migrate-from-sonar, and the Agent API section around it (models, tools/web-search, output-control).
 Via the `perplexity-docs` MCP server, search with compact queries (2-6 terms, e.g. "web_search filters recency"); without MCP, fetch the docs pages directly.
-Model and preset catalogs drift fastest - re-verify slugs against GET https://api.perplexity.ai/v1/models (no auth) rather than trusting any table, including this skill's.
+Model and preset catalogs drift fastest - re-verify slugs against GET https://api.perplexity.ai/v1/models with your API key rather than trusting any table, including this skill's.
