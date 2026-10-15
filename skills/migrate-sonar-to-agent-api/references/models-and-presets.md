@@ -15,11 +15,11 @@ Do not invent slugs: there is NO `perplexity/sonar-pro` slug.
 |---|---|---|
 | `sonar` | `preset: "fast"`, or `model: "perplexity/sonar"` + `tools: [{"type": "web_search"}]` | `fast` is the documented starting point. Output is not byte-identical and pricing differs - A/B compare quality and cost before cutover. |
 | `sonar-pro` | Two options - pick per the heuristic below | Option 1, documented starting point: `preset: "fast"`. Option 2, model-slug substitution: `model: "perplexity/sonar"` + web_search. |
-| `sonar-reasoning` | `preset: "low"`, or a current reasoning model + web_search | Retired; do not carry the name forward. Verify the model's supported reasoning efforts and note the substitution in your migration notes. |
+| `sonar-reasoning` | `preset: "low"`, or a current reasoning model + web_search | This skill's recommendation for the retired model, not a mapping specified by the migration guide. Verify the model's supported reasoning efforts and note the substitution in your migration notes. |
 | `sonar-reasoning-pro` | `preset: "low"`, or a current reasoning model + web_search + a generously sized `max_output_tokens` | `low` is the documented starting point; evaluate heavier presets separately. |
 | `sonar-deep-research` | `preset: "high"` | The current migration guide recommends `high` for deep research. |
 
-These are starting points from the [migration guide](https://docs.perplexity.ai/docs/agent-api/migrate-from-sonar/how-to), not guarantees of equivalent behavior or cost.
+The [migration guide](https://docs.perplexity.ai/docs/agent-api/migrate-from-sonar/how-to) supplies the documented preset starting points above; alternative model choices and the `sonar-reasoning` row are this skill's recommendations. None guarantees equivalent behavior or cost.
 
 ### The sonar-pro two-option rule
 
