@@ -113,7 +113,7 @@ Envelope: `{"error": {"message": str, "type": str, "code": int, "param"?: str}}`
 | 400 | `invalid_request`, `invalid_model`, `invalid_parameter`, `invalid_date_format`, `invalid_search_domain_filter`, ... | Unknown field (with `param`), bad model slug, bad filter, missing `max_output_tokens` on `anthropic/*`, reserved function name, expired reconnect cursor. |
 | 401/403 | `forbidden` | Bad or blocked key. |
 | 404 | `not_found` | Unknown response id (also returned for other accounts' ids and `store:false` responses). |
-| 413 | `payload_too_large` | Request body exceeds the applicable limit; document requests allow up to 72 MiB with a separate 50 MiB decoded-inline-document limit. See [request limits](request-mapping.md#limits). |
+| 413 | `payload_too_large` | Native Responses request body exceeds its configured limit (at most 72 MiB). Decoded inline documents have a separate 50 MiB combined limit. See [request limits](request-mapping.md#limits). |
 | 424 | `external_connector_error` | MCP server unreachable. |
 | 429 | `request_rate_limit_exceeded` | Rate limit; retry with backoff; `X-RateLimit-*` headers present. |
 | 5xx | `internal_error`, `bad_gateway`, `upstream_structured_output_failed`, `gateway_timeout` | Retry-worthy. |

@@ -128,7 +128,7 @@ Only remove the feature if none of these fit, and call the removal out in the mi
 
 | Limit | Value / behavior |
 |---|---|
-| Document request body | <= 72 MiB including base64, prompts, and other fields; decoded inline documents have a separate 50 MiB combined limit |
+| Native Responses request body | Up to 72 MiB, subject to a lower configured limit, including prompts, base64, and all other fields; decoded inline documents have a separate 50 MiB combined limit |
 | `search_domain_filter` | <= 20 entries, scheme-less, <= 253 chars each |
 | `models` fallback chain | <= 5 |
 | `metadata` | <= 16 keys; key <= 64; value <= 512 |
