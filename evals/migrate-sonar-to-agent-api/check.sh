@@ -41,7 +41,38 @@ ABSENT=(
   "\\[[\"']citations[\"']\\]|\\.citations\\b|get\\([\"']citations[\"']"
   "[\"']sonar(-[a-z]+)*[\"']"
 )
+# Only max_tokens belonging to the web_search object is a valid tool budget.
+request_max_tokens() {
+  hit "(^|[^_a-zA-Z])max_tokens\\b" | "$PY" -c '
+import importlib.util, sys
+from collections import defaultdict
+spec = importlib.util.spec_from_file_location("scanner", sys.argv[1])
+scanner = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(scanner)
+hits = defaultdict(list)
+for row in sys.stdin:
+    path, num, _ = row.split(":", 2)
+    hits[path].append(int(num))
+for path, nums in hits.items():
+    lines = open(path, encoding="utf-8", errors="ignore").read().splitlines()
+    budget_lines = scanner.web_search_budget_lines(lines)
+    for n in nums:
+        if n not in budget_lines:
+            print(f"{path}:{n}:{lines[n - 1]}")
+' "$(dirname "$0")/../../skills/migrate-sonar-to-agent-api/scripts/scan_sonar_usage.py"
+}
+
 for pat in "${ABSENT[@]}"; do
+  if [ "$pat" = "(^|[^_a-zA-Z])max_tokens\\b" ]; then
+    if [ -n "$(request_max_tokens)" ]; then
+      echo "FAIL leftover: $pat"
+      request_max_tokens | head -3
+      fail=1
+    else
+      echo "  ok: no $pat"
+    fi
+    continue
+  fi
   if hit "$pat" >/dev/null; then
     echo "FAIL leftover: $pat"
     hit "$pat" | head -3

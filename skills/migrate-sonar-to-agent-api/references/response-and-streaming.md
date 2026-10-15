@@ -15,7 +15,8 @@ Read this when rewriting response handling or a streaming consumer.
 | `usage.total_tokens` | `usage.total_tokens` |
 | `usage.cost.{input_tokens_cost, output_tokens_cost, request_cost, total_cost}` | `usage.cost.{input_cost, output_cost, tool_calls_cost, total_cost, currency:"USD", tool_calls_cost_details}` |
 | (search billing) | `usage.tool_calls_details` and `cost.tool_calls_cost_details` are keyed by billing tool names that differ from the request-side tool types: `search_web` (not web_search), `search_people` (not people_search), `fetch_url`, `finance_search`, `sandbox`. |
-| `images`, `videos`, `related_questions` | GONE. Workaround: structured outputs plus prompting; for `related_questions` use the lightweight recipe in [request-mapping.md](request-mapping.md). |
+| `images` | Enable `image_search` and read the `output[]` item with `type:"image_search_results"`. Its `results[]` entries contain `image_url` and `origin_url`; see [request-mapping.md](request-mapping.md). |
+| `videos`, `related_questions` | No matching top-level fields. For `related_questions`, use the lightweight prompting/structured-output recipe in [request-mapping.md](request-mapping.md); video results have no public equivalent. |
 | `id` | `id` (`resp_...`), plus `object:"response"`, `created_at`, `completed_at`, `status`. |
 | `finish_reason` | No direct field. Check `response.status` (below) and `incomplete_details.reason` (`"max_output_tokens"` ~ finish_reason `"length"`). |
 
@@ -112,7 +113,7 @@ Envelope: `{"error": {"message": str, "type": str, "code": int, "param"?: str}}`
 | 400 | `invalid_request`, `invalid_model`, `invalid_parameter`, `invalid_date_format`, `invalid_search_domain_filter`, ... | Unknown field (with `param`), bad model slug, bad filter, missing `max_output_tokens` on `anthropic/*`, reserved function name, expired reconnect cursor. |
 | 401/403 | `forbidden` | Bad or blocked key. |
 | 404 | `not_found` | Unknown response id (also returned for other accounts' ids and `store:false` responses). |
-| 413 | `payload_too_large` | Body > 32 MiB. |
+| 413 | `payload_too_large` | Request body exceeds the applicable limit; document requests allow up to 72 MiB with a separate 50 MiB decoded-inline-document limit. See [request limits](request-mapping.md#limits). |
 | 424 | `external_connector_error` | MCP server unreachable. |
 | 429 | `request_rate_limit_exceeded` | Rate limit; retry with backoff; `X-RateLimit-*` headers present. |
 | 5xx | `internal_error`, `bad_gateway`, `upstream_structured_output_failed`, `gateway_timeout` | Retry-worthy. |

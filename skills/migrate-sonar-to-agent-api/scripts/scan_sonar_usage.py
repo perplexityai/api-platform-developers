@@ -12,9 +12,12 @@ Stdlib only; Python 3.9+.
 """
 
 import argparse
+import ast
+import io
 import json
 import re
 import sys
+import tokenize
 from pathlib import Path
 
 SKIP_DIRS = {
@@ -63,7 +66,8 @@ PATTERNS = [
                 r"|search_after_date_filter|search_before_date_filter"
                 r"|last_updated_(?:after|before)_filter|web_search_options"
                 r"|search_mode|disable_search|enable_search_classifier"
-                r"|return_images|return_related_questions|num_search_results"
+                r"|return_images|image_domain_filter|image_format_filter|num_images"
+                r"|return_related_questions|num_search_results|pdf_url"
                 r"|presence_penalty|frequency_penalty|top_k|max_tokens)\b"),
      "Sonar request param"),
     ("param",
@@ -115,9 +119,45 @@ def _inside_tool_filters(lines, idx):
     return any(NESTED_FILTERS_RX.search(lines[j]) for j in range(lo, idx + 1))
 
 
+def web_search_budget_lines(lines):
+    """Only exempt budgets belonging to the same object as type: web_search."""
+    try:
+        tokens = list(tokenize.generate_tokens(io.StringIO("\n".join(lines)).readline))
+    except (tokenize.TokenError, IndentationError, SyntaxError):
+        return set()
+    stack = []
+    tools = set()
+    budgets = {}
+    for i, token in enumerate(tokens):
+        value = token.string
+        if value in ("{", "[", "("):
+            stack.append((value, i))
+        elif value in ("}", "]", ")"):
+            if stack:
+                stack.pop()
+        elif value.strip("\"'") == "max_tokens":
+            owner = stack[-1][1] if stack and stack[-1][0] == "{" else None
+            if i + 1 >= len(tokens) or tokens[i + 1].string != ":":
+                owner = None
+            budgets.setdefault(token.start[0], []).append(owner)
+        elif value.strip("\"'") == "type" and stack and stack[-1][0] == "{":
+            try:
+                if (tokens[i + 1].string == ":"
+                        and ast.literal_eval(tokens[i + 2].string) == "web_search"):
+                    tools.add(stack[-1][1])
+            except (ValueError, SyntaxError, IndexError):
+                pass
+    return {line for line, owners in budgets.items() if all(owner in tools for owner in owners)}
+
+
+def _only_max_tokens(rx, line):
+    return {m.group(0) for m in rx.finditer(line)} == {"max_tokens"}
+
+
 def scan_lines(lines, loc_fmt="L{n}"):
     """Scan an iterable of lines; yield (category, location, snippet, label)."""
     lines = list(lines)
+    budget_lines = web_search_budget_lines(lines)
     findings = []
     stream_hits = []
     for n, line in enumerate(lines, 1):
@@ -129,6 +169,9 @@ def scan_lines(lines, loc_fmt="L{n}"):
                 if (label == "Sonar request param" and FILTER_PARAM_RX.search(line)
                         and not re.search(r"\bmax_tokens\b|\bweb_search_options\b|\bsearch_mode\b", line)
                         and _inside_tool_filters(lines, n - 1)):
+                    continue
+                if (label == "Sonar request param" and _only_max_tokens(rx, line)
+                        and n in budget_lines):
                     continue
                 seen.add((category, label))
                 findings.append((category, loc_fmt.format(n=n), snippet(line), label))

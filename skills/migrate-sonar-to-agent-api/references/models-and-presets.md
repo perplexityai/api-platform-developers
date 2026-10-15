@@ -4,29 +4,31 @@ Read this when choosing a target model or preset for a migrated call site.
 
 ## Valid model slugs
 
-`GET https://api.perplexity.ai/v1/models` (no auth required) is authoritative - always verify slugs there before writing them into code.
-Agent API slugs are provider-prefixed, e.g. `perplexity/sonar`, `openai/gpt-5.1`, `anthropic/claude-sonnet-4-5`, `google/gemini-3-flash-preview`.
+Verify slugs against the current [model reference](https://docs.perplexity.ai/docs/agent-api/models) or `GET https://api.perplexity.ai/v1/models` with your API key before writing them into code.
+Agent API slugs are provider-prefixed, e.g. `perplexity/sonar` and `openai/gpt-6-luna`.
+Check the [changelog](https://docs.perplexity.ai/docs/resources/changelog) for retirement dates when choosing a model.
 Do not invent slugs: there is NO `perplexity/sonar-pro` slug.
 
 ## Model mapping table
 
 | Sonar model | Migrate to | Rationale and caveats |
 |---|---|---|
-| `sonar` | `model: "perplexity/sonar"` + `tools: [{"type": "web_search"}]`, or `preset: "fast"` | Closest by name. CAUTION: output is not byte-identical to chat `sonar` and pricing differs (see the public pricing page) - A/B compare quality and cost before cutover. |
-| `sonar-pro` | Two options - pick per the heuristic below | Option 1, behavioral match: `preset: "low"` (pro-search, multi-step search). Option 2, lighter direct substitution: `model: "perplexity/sonar"` + web_search. |
-| `sonar-reasoning` | `preset: "low"`, or a reasoning model (e.g. `openai/gpt-5.1` + `reasoning: {"effort": "medium"}` + web_search) | Retired; do not carry the name forward. Note the substitution in your migration notes. |
-| `sonar-reasoning-pro` | `preset: "low"` (closest), or a reasoning model + `reasoning: {"effort": "medium"}` + web_search + a generously sized `max_output_tokens` | `medium` is a strictly heavier, costlier tier - offer it only as an explicit upgrade. |
-| `sonar-deep-research` | `preset: "medium"` (deep-research) | The medium (deep-research) preset is the closest published equivalent of sonar-deep-research. `high` is a costlier upgrade, not an equivalent; offer it only as an explicit upsell note. |
+| `sonar` | `preset: "fast"`, or `model: "perplexity/sonar"` + `tools: [{"type": "web_search"}]` | `fast` is the documented starting point. Output is not byte-identical and pricing differs - A/B compare quality and cost before cutover. |
+| `sonar-pro` | Two options - pick per the heuristic below | Option 1, documented starting point: `preset: "fast"`. Option 2, model-slug substitution: `model: "perplexity/sonar"` + web_search. |
+| `sonar-reasoning` | `preset: "low"`, or a current reasoning model + web_search | Retired; do not carry the name forward. Verify the model's supported reasoning efforts and note the substitution in your migration notes. |
+| `sonar-reasoning-pro` | `preset: "low"`, or a current reasoning model + web_search + a generously sized `max_output_tokens` | `low` is the documented starting point; evaluate heavier presets separately. |
+| `sonar-deep-research` | `preset: "high"` | The current migration guide recommends `high` for deep research. |
+
+These are starting points from the [migration guide](https://docs.perplexity.ai/docs/agent-api/migrate-from-sonar/how-to), not guarantees of equivalent behavior or cost.
 
 ### The sonar-pro two-option rule
 
-- **Option 1 - behavioral match: `preset: "low"`.**
-  Caveats to state inline in migration notes: `preset` is a separate request field, not a model slug; it may resolve to a third-party model (`response.model` can echo e.g. a `google/*` model); higher latency and cost per call; via the OpenAI SDK pass `extra_body={"preset": "low"}` and omit `model`.
-- **Option 2 - lighter substitution: `model: "perplexity/sonar"` + `tools: [{"type": "web_search"}]`.**
+- **Option 1 - documented starting point: `preset: "fast"`.**
+  Caveats to state inline in migration notes: `preset` is a separate request field, not a model slug; it may resolve to a third-party model; compare quality, latency, and cost; via the OpenAI SDK pass `extra_body={"preset": "fast"}` and omit `model`.
+- **Option 2 - model-slug substitution: `model: "perplexity/sonar"` + `tools: [{"type": "web_search"}]`.**
   Required when the code's contract is a model slug: a `--model` CLI flag, a model allowlist, or a framework model-class bridge that takes a model string (presets do not fit there).
-  Also preferred for lightweight or high-frequency call sites where pro-search depth is not the point.
 
-Selection heuristic: model-slug contract -> option 2; hardcoded single model where search depth matters -> option 1; otherwise either, but document the substitution.
+Selection heuristic: model-slug contract -> option 2; otherwise start with option 1, but document and evaluate the substitution.
 
 **Preset plus search filters:** per the presets documentation, a tool you list in the request overrides only the preset's tool of the same type; the preset's other tools stay enabled.
 When the flow needs guaranteed `search_domain_filter` / recency / date filters, the simplest setup to reason about is still option 2 - an explicit model plus a `web_search` tool carrying `filters` - because nothing else is bundled alongside it.
@@ -35,7 +37,8 @@ When the flow needs guaranteed `search_domain_filter` / recency / date filters, 
 
 Know these before using presets:
 
-- Short names `fast | low | medium | high | xhigh` are the canonical preset names; `fast-search | pro-search | deep-research | advanced-deep-research` are accepted as previous names for the first four.
+- Short names `fast | low | medium | high | xhigh` are the canonical preset names; `fast-search | pro-search | deep-research | advanced-deep-research | ultra` are their respective previous names.
+- Preset models and tool configuration can change; consult the current [preset reference](https://docs.perplexity.ai/docs/agent-api/presets) rather than freezing a model from an old example.
 - Any request field set alongside `preset` overrides the preset's value for that field (request-over-preset precedence).
   In particular, set `max_output_tokens` in the request when you need a cap.
 - `instructions` alongside a preset REPLACES the preset's system prompt entirely; `""` clears it; omit the field to keep it.
