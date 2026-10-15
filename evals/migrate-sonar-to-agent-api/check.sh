@@ -41,24 +41,25 @@ ABSENT=(
   "\\[[\"']citations[\"']\\]|\\.citations\\b|get\\([\"']citations[\"']"
   "[\"']sonar(-[a-z]+)*[\"']"
 )
-# web_search tool budgets (max_tokens next to web_search or max_tokens_per_page)
-# are valid Agent API fields; only request-level max_tokens is a leftover.
+# Only max_tokens belonging to the web_search object is a valid tool budget.
 request_max_tokens() {
   hit "(^|[^_a-zA-Z])max_tokens\\b" | "$PY" -c '
-import re, sys
+import importlib.util, sys
 from collections import defaultdict
-budget = re.compile(r"[\"\x27]web_search[\"\x27]|\bmax_tokens_per_page\b")
+spec = importlib.util.spec_from_file_location("scanner", sys.argv[1])
+scanner = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(scanner)
 hits = defaultdict(list)
 for row in sys.stdin:
     path, num, _ = row.split(":", 2)
     hits[path].append(int(num))
 for path, nums in hits.items():
     lines = open(path, encoding="utf-8", errors="ignore").read().splitlines()
+    budget_lines = scanner.web_search_budget_lines(lines)
     for n in nums:
-        window = lines[max(0, n - 5):n]
-        if not any(budget.search(line) for line in window):
+        if n not in budget_lines:
             print(f"{path}:{n}:{lines[n - 1]}")
-'
+' "$(dirname "$0")/../../skills/migrate-sonar-to-agent-api/scripts/scan_sonar_usage.py"
 }
 
 for pat in "${ABSENT[@]}"; do
