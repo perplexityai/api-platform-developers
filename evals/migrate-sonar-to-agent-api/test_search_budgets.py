@@ -17,6 +17,7 @@ class SearchBudgetTests(unittest.TestCase):
     def test_only_nested_tool_budgets_are_exempt(self):
         cases = [
             ('tools=[{"type": "web_search", "max_tokens": 2000}]', False),
+            ('const tools = [{type: "web_search", max_tokens: 2000}];', False),
             ('tools=[{\n"max_tokens": 2000,\n"type": "web_search"\n}]', False),
             ('responses.create(\n tools=[{"type": "web_search"}],\n max_tokens=100,\n)', True),
             ('payload={"tools": [{"type": "web_search"}], "max_tokens": 100}', True),

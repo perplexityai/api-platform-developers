@@ -140,9 +140,9 @@ def web_search_budget_lines(lines):
             if i + 1 >= len(tokens) or tokens[i + 1].string != ":":
                 owner = None
             budgets.setdefault(token.start[0], []).append(owner)
-        elif token.type == tokenize.STRING and stack and stack[-1][0] == "{":
+        elif value.strip("\"'") == "type" and stack and stack[-1][0] == "{":
             try:
-                if (ast.literal_eval(value) == "type" and tokens[i + 1].string == ":"
+                if (tokens[i + 1].string == ":"
                         and ast.literal_eval(tokens[i + 2].string) == "web_search"):
                     tools.add(stack[-1][1])
             except (ValueError, SyntaxError, IndexError):
