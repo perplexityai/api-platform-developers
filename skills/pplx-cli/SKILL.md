@@ -1,15 +1,15 @@
 ---
 name: pplx-cli
-description: "Install and use Perplexity's pplx CLI for live web search and query-relevant page snippets from the terminal. Use to search the web, look up current information or news, get query-relevant excerpts from specific URLs, or install and authenticate the pplx command."
-when_to_use: "Any request like: search the web for X, find the latest news about X, look up current events, use Perplexity to search, search with pplx, install the pplx CLI, set up the Perplexity CLI, get query-relevant excerpts from specific URLs, what do these pages say about X, restrict a web search to certain domains or dates."
-argument-hint: "[search query or URL]"
+description: "Install and use Perplexity's pplx CLI for live web search, query-relevant page snippets, and the API changelog. Use to search the web, get excerpts from URLs, check Perplexity API changes and deprecations before recommending an integration, or install and authenticate pplx."
+when_to_use: "Any request like: search the web for X, find the latest news about X, look up current events, use Perplexity to search, search with pplx, install the pplx CLI, set up the Perplexity CLI, get query-relevant excerpts from specific URLs, what do these pages say about X, restrict a web search to certain domains or dates, what changed in the Perplexity API, check recent API deprecations or model updates."
+argument-hint: "[search query, URL, or API changelog question]"
 ---
 
-# pplx - Perplexity's web search and page-snippets CLI
+# pplx - Perplexity's web search, page-snippets, and API changelog CLI
 
 ## What this skill does
 
-Installs, authenticates, and drives Perplexity's public `pplx` CLI: `pplx search web` for live web search, `pplx content snippets` for query-relevant page excerpts.
+Installs and drives Perplexity's public `pplx` CLI: `pplx search web` for live web search, `pplx content snippets` for query-relevant page excerpts, and `pplx changelog` for public API updates without authentication.
 Output contract: success = exit 0 and exactly one JSON object on stdout; failures are pitfall 4.
 
 ## Install
@@ -26,12 +26,34 @@ Update with `pplx update` (checksum-verified in-place replacement, no API key ne
 
 ## Auth
 
+Only search and snippets need an API key. For API updates, go directly to [API changelog](#api-changelog).
+
 To auth run: `pplx auth login` if not authed already (interactive, needs a terminal; keys: https://www.perplexity.ai/account/api).
 In non-interactive sessions (agents, CI) export `PERPLEXITY_API_KEY` instead - `auth login` rejects piped input (pitfall 1).
 
 The env var takes precedence over a key stored by interactive `pplx auth login` (`<config>/perplexity/credentials.json`; macOS `~/Library/Application Support`, Linux `$XDG_CONFIG_HOME` or `~/.config`).
-No configured key results in an `AUTHENTICATION` error on the first real command.
-Keys are redacted from all CLI output; the CLI talks to `https://api.perplexity.ai`.
+No configured key results in an `AUTHENTICATION` error on search or snippets.
+Keys are redacted from all CLI output; search and snippets use `https://api.perplexity.ai`.
+
+## API changelog
+
+When asked what changed in the Perplexity API, or when recent capabilities, model updates, or deprecations affect an integration recommendation, read the changelog before giving guidance:
+
+```sh
+pplx changelog
+pplx changelog --limit 20
+```
+
+The command reads the public docs RSS feed at `https://docs.perplexity.ai/docs/resources/changelog/rss.xml` without credentials. It works before `pplx auth login`; do not request an API key for it.
+
+If `pplx changelog --help` reports an unknown command, run `pplx update`. If it is still unavailable, read `https://docs.perplexity.ai/docs/resources/changelog` directly.
+
+- Stdout: `{entries: [{headline, tags, url, date, content}]}`. `tags` is an array of strings; the other entry fields are strings.
+- Default: up to five entries. `--limit` accepts integers from 1 through 20 and returns only as many entries as the feed contains.
+- Preserve feed order, which follows the changelog page. `date` is the feed-reported date normalized to RFC 3339, not necessarily the original publication date.
+- `content` is HTML. A leading bold headline is lifted into `headline`; when absent, the feed title is used and the body stays intact.
+- Summarize relevant entries and cite their `url` values. For older history, follow the full changelog page; the feed is a limited window, so an absent entry does not establish that a feature is unavailable.
+- On failure, use the stderr error contract below: `CHANGELOG_FETCH_FAILED` means check connectivity and retry; `FEED_PARSE_FAILED` means update the CLI or consult the changelog page. An out-of-range `--limit` returns `VALUE_VALIDATION`. Report a failed read as unavailable evidence, not as "no updates."
 
 ## Search
 
@@ -48,7 +70,7 @@ pplx search web "kubernetes pod OOMKilled causes" "why does k8s keep killing my 
 ```
 
 That keeps stdout to a few KB, with `saved_to` (plus `truncated` when any field was actually cut) and the full JSON at `out/web/{rand}.json` (written only after a successful request) - read the file when the preview is not enough.
-Set `PPLX_OUTPUT_DIR` once to a workspace-appropriate path to give every command a default save dir instead of repeating `--output-dir`.
+Set `PPLX_OUTPUT_DIR` once to a workspace-appropriate path to give search and snippets a default save dir instead of repeating `--output-dir`.
 More scoping flags (`--domains`, date bounds, `--recency-filter`, `--country`, token budgets): see `pplx search web --help`.
 
 ## Snippets
@@ -69,7 +91,7 @@ Binaries v0.2.2 and older fail with an unknown-command error on `content snippet
 
 ## When unsure
 
-Every subcommand's `--help` prints full flag docs plus Input shape, Stdout shape, Saved file schema, and examples - consult it instead of guessing flags.
+Consult each subcommand's `--help` instead of guessing flags. Search and snippets also document input, stdout, saved-file shapes, and examples there. Changelog output is already JSON; it has no `--json` or `--output-dir` flag.
 
 ## Top pitfalls
 
